@@ -9,6 +9,7 @@ Created on Sat Oct  6 21:44:56 2018
 import scipy.linalg as lin
 import numpy as np
 import random as rand
+import math
 
 lin.hadamard(128, dtype = int)
 
@@ -79,7 +80,10 @@ def testOutcomes(problemSize, sigma, Ntrials):
     
     return np.mean(results)
 
-testOutcomes(2048, 1/8, 20)
+for i in range(6, 13):
+    for j in [2, 4, 8, 16, 32, 64]:
+        print("n = ", 2**i, "; sigma = ", j, "; pct correct = ", testOutcomes(2**i, 1/j, 20), sep="")
+        
 
 
     
