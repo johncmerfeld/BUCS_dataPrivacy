@@ -95,15 +95,15 @@ def testOutcomes(problemSize, m, sigma, Ntrials):
 
 output = []
 
-for i in range(7,11):
-    for j in [2, 4, 8, 16]:
+for i in range(7,12):
+    for j in [2, 4, 8, 16, 32]:
         for k in [1.1, 2, 4]:
             n = int(2**i)
             m = int(k * n)
             print(n, m, 1/j)
             d = {
                 'n' : n,
-                'm' : m,
+                'm_factor' : k,
                 '1/sigma' : j,
                 'pct_correct' : testOutcomes(n, m, 1/j, 20)
             }

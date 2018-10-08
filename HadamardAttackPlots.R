@@ -15,4 +15,5 @@ ggplot(results,
   scale_x_log10() + 
   ggtitle("With low enough noise, even large datasets can be perfectly reconstructed") +
   xlab("less noise \U2192") + 
-  ylab("ratio of secret bits correctly guessed")
+  ylab("ratio of secret bits correctly guessed") + 
+  labs(color = "# of records")

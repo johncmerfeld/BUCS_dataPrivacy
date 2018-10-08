@@ -3,7 +3,7 @@ library(ggplot2)
 library(data.table)
 
 results <- fread('RandomQueryResults.csv')
-results$nmgroup = as.factor(results$n * results$m)
+results$nmgroup = as.factor(results$n + results$m_factor)
 
 ggplot(results,
        aes(x = `1/sigma`,
@@ -11,8 +11,11 @@ ggplot(results,
            color = as.factor(n),
            group = nmgroup)) + 
   geom_line(alpha = 0.5,
-            aes(size = m)) + 
+            aes(size = m_factor)) + 
+  scale_color_brewer(palette = "Spectral") +
   scale_x_log10() + 
-  ggtitle("With low enough noise, even large datasets can be perfectly reconstructed") +
+  ggtitle("Larger random query matrices can reconstruct noisier datasets") +
   xlab("less noise \U2192") + 
-  ylab("ratio of secret bits correctly guessed")
+  ylab("ratio of secret bits correctly guessed") + 
+  labs(color = "# of records",
+       size = "ratio of queries to records")
