@@ -80,17 +80,16 @@ def testOutcomes(problemSize, sigma, Ntrials):
 
 output = []
 
-for i in range(3,6):
+for i in range(3,7):
     for j in [2, 4, 8, 16, 32, 64]:
         d = {
-            'n' : 4**(i + 0.5),
+            'n' : int(4**(i + 0.5)),
             '1/sigma' : j,
-            'pct_correct' : testOutcomes(4**(i + 0.5), 1/j, 20)
+            'pct_correct' : testOutcomes(int(4**(i + 0.5)), 1/j, 20)
         }
         output.append(d)
         
 output = pd.DataFrame(output)
         
 output.to_csv('HadamardResults.csv')
-    
     
