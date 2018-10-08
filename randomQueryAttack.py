@@ -9,6 +9,7 @@ Created on Sun Oct  7 22:56:36 2018
 import numpy as np
 import random as rand
 import pandas as pd
+from scipy.linalg import lstsq
 
 def secretVector(n):
     # set up secret vector
@@ -25,13 +26,10 @@ def privacyMechanism(A, x, sigma):
     
     n = len(x)
     # set up noise vector 
-    e = np.zeros(n, dtype = float)
+    e = np.zeros(len(A), dtype = float)
     for i in range(0, len(e)):
         e[i] = np.random.normal(0, sigma ** 2)
-    
-    print(A)
-    print(x)
-    print(e)
+
     return ((1/n) * A.dot(x)) + e
 
 def randomQueryAttack(n, x, m, sigma):
@@ -49,18 +47,21 @@ def randomQueryAttack(n, x, m, sigma):
     # get query result
     a = privacyMechanism(R, x, sigma)
     
+   # def fun(x, A, y):
+   #     return A.dot(x) - y 
+    
     # formulate guess
-    z = np.linalg.lstsq(((1/n) * R), z) 
+    #x0 = np.ones(n, dtype=float)
+    #z = least_squares(fun, x0 = x0, args = ((1/n) * R, a))
+    z = lstsq((1/n) * R, a)[0]
     
     g = np.zeros(n, dtype = int)
     for i in range(0, len(z)):
         r = int(round(z[i]))
-        if r >= 1:
+        if r >= 0.5:
             g[i] = 1
         else: 
             g[i] = 0
-    return g
-    
     return g
      
 def normalizedHammingDistance(v1, v2):
@@ -91,5 +92,26 @@ def testOutcomes(problemSize, m, sigma, Ntrials):
     return np.mean(results)
 
 
-testOutcomes(16, 20, 1/8, 20)
+
+output = []
+
+for i in range(7,11):
+    for j in [2, 4, 8, 16]:
+        for k in [1.1, 2, 4]:
+            n = int(2**i)
+            m = int(k * n)
+            print(n, m, 1/j)
+            d = {
+                'n' : n,
+                'm' : m,
+                '1/sigma' : j,
+                'pct_correct' : testOutcomes(n, m, 1/j, 20)
+            }
+            output.append(d)
+        
+output = pd.DataFrame(output)
+        
+output.to_csv('RandomQueryResults.csv')
+
+
 
