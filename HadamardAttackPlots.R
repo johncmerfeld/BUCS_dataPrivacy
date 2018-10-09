@@ -12,6 +12,7 @@ ggplot(results,
            group = n)) + 
   geom_line(alpha = 0.5,
             size = 2) + 
+  scale_color_brewer(palette = "Spectral") +
   scale_x_log10() + 
   ggtitle("With low enough noise, even large datasets can be perfectly reconstructed") +
   xlab("less noise \U2192") + 

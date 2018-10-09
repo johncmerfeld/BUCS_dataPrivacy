@@ -1,19 +1,14 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Oct  6 21:44:56 2018
-
-@author: johncmerfeld
-"""
-
-import scipy.linalg as lin
 import numpy as np
 import random as rand
 import pandas as pd
+from scipy.linalg import hadamard
 
+# given a length n, 
+#   return a random binary vector
 def secretVector(n):
-    # set up secret vector
-    x = np.zeros(n, dtype=int)
+    
+    x = np.zeros(n, dtype = int)
+    
     for i in range(0, len(x) - 1):
         r = rand.uniform(0, 1)
         if r < 0.5:
@@ -22,20 +17,22 @@ def secretVector(n):
             x[i] = 1
     return x
 
+# given a matrix A, a vector x, and a variance s
+#   return a vector Ax + e, where e is a random error term from N(0, s^2)
 def privacyMechanism(A, x, sigma):
     
     n = len(x)
     # set up noise vector 
-    e = np.zeros(n, dtype = float)
+    e = np.zeros(len(A), dtype = float)
     for i in range(0, len(e)):
         e[i] = np.random.normal(0, sigma ** 2)
-    
+
     return ((1/n) * A.dot(x)) + e
 
 def hadamardAttack(n, x, sigma):
     
     # set up query matrix
-    H = lin.hadamard(n, dtype = int)
+    H = hadamard(n, dtype = int)
     
     # get query result
     a = privacyMechanism(H, x, sigma)

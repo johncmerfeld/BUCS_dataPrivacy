@@ -1,19 +1,14 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Oct  7 22:56:36 2018
-
-@author: johncmerfeld
-"""
-
 import numpy as np
 import random as rand
 import pandas as pd
 from scipy.linalg import lstsq
 
+# given a length n, 
+#   return a random binary vector
 def secretVector(n):
-    # set up secret vector
-    x = np.zeros(n, dtype=int)
+    
+    x = np.zeros(n, dtype = int)
+    
     for i in range(0, len(x) - 1):
         r = rand.uniform(0, 1)
         if r < 0.5:
@@ -22,6 +17,8 @@ def secretVector(n):
             x[i] = 1
     return x
 
+# given a matrix A, a vector x, and a variance s
+#   return a vector Ax + e, where e is a random error term from N(0, s^2)
 def privacyMechanism(A, x, sigma):
     
     n = len(x)
