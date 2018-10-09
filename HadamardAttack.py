@@ -1,10 +1,10 @@
 import numpy as np
-import random as rand
 import pandas as pd
 from scipy.linalg import hadamard
 
 from attackUtils import secretVector
 from attackUtils import privacyMechanism
+from attackUtils import normalizedHammingDistance
 
 def hadamardAttack(n, x, sigma):
     
@@ -24,20 +24,7 @@ def hadamardAttack(n, x, sigma):
         else: 
             g[i] = 0
     return g
-     
-def normalizedHammingDistance(v1, v2):
-    # sanity check
-    assert len(v1) == len(v2)
     
-    # initialize output
-    distance = 0
-    
-    for i in range(0, len(v1)):
-        if v1[i] != v2[i]:
-            distance += 1
-    
-    return (len(v1) - distance) / len(v1)
-       
 def evaluateAttack(n, sigma):
     x = secretVector(n)
     g = hadamardAttack(n, x, sigma)

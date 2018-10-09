@@ -1,6 +1,5 @@
 import numpy as np
 import random as rand
-import pandas as pd
 
 # given a length n, 
 #   return a random binary vector
