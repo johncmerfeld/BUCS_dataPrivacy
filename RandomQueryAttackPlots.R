@@ -12,7 +12,7 @@ ggplot(results,
            group = nmgroup)) + 
   geom_line(alpha = 0.5,
             aes(size = m_factor)) + 
-  scale_color_brewer(palette = "Spectral") +
+  scale_color_brewer(palette = "Dark2") +
   scale_x_log10() + 
   ggtitle("Larger random query matrices can reconstruct noisier datasets") +
   xlab("less noise \U2192") + 
