@@ -51,8 +51,8 @@ def testOutcomes(problemSize, m, sigma, Ntrials):
     for i in range(0, Ntrials):
         results.append(evaluateAttack(problemSize, m, sigma))
     
-    print(np.std(results))
-    print(np.mean(results))
+    #print(np.std(results))
+    #print(np.mean(results))
     return np.mean(results)
 
 output = []

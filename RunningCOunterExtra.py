@@ -4,7 +4,7 @@ from attackUtils import secretVector
 from attackUtils import normalizedHammingDistance
 from attackUtils import runExperiment
 
-def identifyUsersNaive(x):
+def identifyUsersExtra(x):
     n = len(x)
     c = runExperiment(x)
     g = np.zeros(n, dtype = int)
