@@ -40,19 +40,4 @@ def normalizedHammingDistance(v1, v2):
     
     return (len(v1) - distance) / len(v1)
 
-# given a running counter, a secret vector, and a timestamp:
-#   noisily increment the current counter based on the secret vector
-def incrementCounter(counter, x, t):
-    user = x[t]
-    r = rand.uniform(0, 1)
-    if r > 0.5:
-        user += 1
-    return user
 
-def runExperiment(x):
-    n = len(x)
-    counter = np.zeros(n, dtype = int)
-    counter[0] += incrementCounter(counter, x, 0)
-    for t in range(1, n):
-        counter[t] = counter[t - 1] + incrementCounter(counter, x, t)
-    return counter
