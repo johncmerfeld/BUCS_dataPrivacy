@@ -15,6 +15,6 @@ ggplot(results,
   scale_color_brewer(palette = "Spectral") +
   scale_x_log10() + 
   ggtitle("With low enough noise, even large datasets can be perfectly reconstructed") +
-  xlab("less noise \U2192") + 
+  xlab("1/\U03C3 (less noise \U2192)") + 
   ylab("ratio of secret bits correctly guessed") + 
   labs(color = "# of records")

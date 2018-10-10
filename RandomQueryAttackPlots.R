@@ -15,7 +15,7 @@ ggplot(results,
   scale_color_brewer(palette = "Dark2") +
   scale_x_log10() + 
   ggtitle("Larger random query matrices can reconstruct noisier datasets") +
-  xlab("less noise \U2192") + 
+  xlab("1/\U03C3 (less noise \U2192)") + 
   ylab("ratio of secret bits correctly guessed") + 
   labs(color = "# of records",
        size = "ratio of queries to records")
