@@ -43,6 +43,7 @@ def identifyUsersNaive(x):
             sure[i] = 1
     
     ##
+    ## take another pass, given what I know for sure
     ## 2. use counter total to guess about other users
         
     cTotal = c[n - 1]
