@@ -74,12 +74,14 @@ def testOutcomes(problemSize, Ntrials):
     for i in range(0, Ntrials):
         results.append(evaluateAttack(problemSize))
     
+    #print(np.std(results))
     return np.mean(results)
 
 output = []
 
-for i in range(100, 10000):
-    n = i
+for i in range(1, 400):
+    print(i)
+    n = i * 25
     d = {
         'n' : n,
         'pct_correct' : testOutcomes(n, 20)

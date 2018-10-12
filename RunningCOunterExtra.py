@@ -1,5 +1,6 @@
 import numpy as np
 import random as rand
+import pandas as pd
 from attackUtils import secretVector
 from attackUtils import normalizedHammingDistance
 
@@ -81,7 +82,21 @@ def testOutcomes(problemSize, Ntrials):
     results = []
     for i in range(0, Ntrials):
         results.append(evaluateAttack(problemSize))
-    
+        
+    #print(np.std(results))
     return np.mean(results)
 
-testOutcomes(5000, 20)
+output = []
+
+for i in range(1, 400):
+    print(i)
+    n = i * 25
+    d = {
+        'n' : n,
+        'pct_correct' : testOutcomes(n, 20)
+    }
+    output.append(d)
+        
+output = pd.DataFrame(output)
+        
+output.to_csv('RunningCounterExtra.csv')
