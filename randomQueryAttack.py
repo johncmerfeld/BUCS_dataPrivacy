@@ -20,16 +20,8 @@ def randomQueryAttack(n, x, m, sigma):
                 R[i][j] = 0
     
     # get query result
-    a = privacyMechanism(R, x, sigma)
-    
-   # def fun(x, A, y):
-   #     return A.dot(x) - y 
-    
-    # formulate guess
-    #x0 = np.ones(n, dtype=float)
-    #z = least_squares(fun, x0 = x0, args = ((1/n) * R, a))
-    z = lstsq((1/n) * R, a)[0]
-    
+    a = privacyMechanism(R, x, sigma)  
+    z = lstsq((1/n) * R, a)[0]  
     g = np.zeros(n, dtype = int)
     for i in range(0, len(z)):
         r = int(round(z[i]))
