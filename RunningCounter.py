@@ -43,10 +43,7 @@ def identifyUsersNaive(x):
             g[i] = 1
             sure[i] = 1
     
-    ##
-    ## take another pass, given what I know for sure
-    ## 2. use counter total to guess about other users
-        
+    ## 2. use counter total to guess about other users     
     cTotal = c[n - 1]
     actualClicks = int(0.5 * cTotal)
     clicksFound = sum(g)
