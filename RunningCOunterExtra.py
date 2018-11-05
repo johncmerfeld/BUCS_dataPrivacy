@@ -29,7 +29,7 @@ def runExperiment(x):
     for t in range(1, n):
         counter[t] = counter[t - 1] + incrementCounter(counter, x, t)
     return counter
-
+œ
 def identifyUsersExtra(x):
     n = len(x)
     c = runExperiment(x)
@@ -61,10 +61,8 @@ def identifyUsersExtra(x):
         elif c[i] == (c[i - 1] + 2):
             g[i] = 1
             sure[i] = 1
-    
-    ##
-    ## 2. use extra info to guess about other users
-        
+
+    ## 2. use extra info to guess about other users   
     for i in range(0, n):
         if sure[i] == 0:
             g[i] = extra[i]
