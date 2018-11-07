@@ -1,5 +1,18 @@
+# TensorFlow and tf.keras
 import tensorflow as tf
+from tensorflow import keras
 
-z = tf.constant(5.2, name="x", dtype=tf.float32)
+# Helper libraries
+import numpy as np
+import matplotlib.pyplot as plt
 
-k = tf.Variable(tf.zeros([1]), name="k")
+print(tf.__version__)
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+fashion_mnist = keras.datasets.fashion_mnist
+
+(train_images, train_labels), (test_images, test_labels) = fashion_mnist.load_data()
+
+class_names = ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat', 
+               'Sandal', 'Shirt', 'Sneaker', 'Bag', 'Ankle boot']
+
