@@ -1,6 +1,9 @@
+setwd("Documents/Code/BUCS_dataPrivacy/")
+
+library(tensorflow)
 library(keras)
 install_keras(tensorflow = "gpu")
-use_condaenv("r-tensorflow")
+use_condaenv("venv")
 library(readr)
 library(stringr)
 library(purrr)
