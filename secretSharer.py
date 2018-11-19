@@ -1,18 +1,9 @@
-import tensorflow as tf
-from tensorflow import keras
-from keras import models, layers
-import os
-import numpy as np
-import matplotlib.pyplot as plt
-
-import pandas as pd
-import xml.etree.ElementTree as ET
-from nltk import ngrams
-import string
-
 ## cd /Users/johncmerfeld/Documents/Code/BUCS_dataPrivacy
 
-# 1. READ IN DATA ------------------------------------------
+# 1. READ IN DATA ==========================================
+import pandas as pd
+import xml.etree.ElementTree as ET
+
 root = ET.parse('smsCorpus_en_2015.03.09_all.xml').getroot()
 
 d = []
@@ -23,27 +14,45 @@ for i in range(len(root)):
 
 dataRaw = pd.DataFrame(d)
 
-# 2. CLEAN DATA --------------------------------------------
-# 2.1 REMOVE PUNCTUATION AND MAKE LOWER CASE
+# 2. CLEAN DATA ============================================
+import string
+import re
 
-dataRaw['noPunc'] = dataRaw['text'].apply(lambda s: s.translate(str.maketrans('','', string.punctuation)).lower())
+# 2.1 REMOVE PUNCTUATION AND MAKE LOWER CASE ---------------
+# we want apostraphes in the output
+myPunc = '!"#$%&\()*+-./:;<=>?@[\\]^_`{|}~'
+dataRaw['noPunc'] = dataRaw['text'].apply(lambda s: s.translate(str.maketrans('','', myPunc)).lower())
 
 # 2.2 CORRECT SOME WORDS
-transTable = str.maketrans({
-        " u ": " you ",
-        })
+
+def cleanSMS(sms):
+    sms = re.sub(" [uü] ", " you ", sms)
+    sms = re.sub(" abt ", " about ", sms)
+    sms = re.sub(" tmr ", " tomorrow ", sms)
+    sms = re.sub("^m ", "i'm ", sms)
+    sms = re.sub(" coz | cuz ", " cause ", sms)
+    sms = re.sub("(?<=[^ ])[\.,](?<=[^ ])", " ", sms)
+    
+    return sms
+    
+dataRaw['splchk'] = dataRaw['noPunc'].apply(cleanSMS)
 
 dataRaw
 
 # 2.2 SPLIT INTO OVERLAPPING SETS OF FOUR POINTS AND A LABEL
+from nltk import ngrams
 
-# 3. CREATE DICTIONARY -------------------------------------
+# 3. CREATE DICTIONARY =====================================
 # 3.1 ITERATE THROUGH UNIQUE WORDS
 # 3.2 REASSIGN DATA BASED ON DICTIONARY
 
-# 4. TRAIN MODEL -------------------------------------------
+# 4. TRAIN MODEL ===========================================
+import tensorflow as tf
+from tensorflow import keras
+from keras import models, layers
+import os
+import numpy as np
+import matplotlib.pyplot as plt
+
 
 # https://machinelearningmastery.com/how-to-develop-a-word-level-neural-language-model-in-keras/
-"""
-Model might need to take the form of a 'tetragram' predictor. i.e. it's bounded by predicting hte fifth word in a sequence.
-"""
