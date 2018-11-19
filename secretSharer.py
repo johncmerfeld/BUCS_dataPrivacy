@@ -26,11 +26,20 @@ dataRaw['noPunc'] = dataRaw['text'].apply(lambda s: s.translate(str.maketrans(''
 # 2.2 CORRECT SOME WORDS
 
 def cleanSMS(sms):
+    
+    # leetspeak
     sms = re.sub(" [uü] ", " you ", sms)
     sms = re.sub(" abt ", " about ", sms)
     sms = re.sub(" tmr ", " tomorrow ", sms)
     sms = re.sub("^m ", "i'm ", sms)
     sms = re.sub(" coz | cuz ", " cause ", sms)
+    sms = re.sub(" gd ", " good ", sms)
+    
+    # remove laughter
+    sms = re.sub(" ha ", "", sms)
+    sms = re.sub("a*(ha){2,}h*", "", sms)
+    
+    # force spaces between comma- or period-separated words
     sms = re.sub("(?<=[^ ])[\.,](?<=[^ ])", " ", sms)
     
     return sms
