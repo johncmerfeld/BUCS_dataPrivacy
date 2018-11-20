@@ -20,7 +20,7 @@ import re
 myPunc = '!"#$%&\()*+-/:;<=>?@[\\]^_`{|}~\''
 dataRaw['noPunc'] = dataRaw['text'].apply(lambda s: s.translate(str.maketrans('','', myPunc)).lower())
 
-# 2.2 CORRECT SOME WORDS -----------------------------------
+# 2.2 SCRUB MESSAGES ----------------------------------------
 
 def cleanSMS(sms):
     
@@ -214,28 +214,57 @@ def cleanSMS(sms):
 dataRaw['splchk'] = dataRaw['noPunc'].apply(cleanSMS)
 dataRaw['splchk'] = dataRaw['splchk'].apply(cleanSMS)
 
-dataRaw
-
-# 2.2 SPLIT INTO OVERLAPPING SETS OF FOUR POINTS AND A LABEL
+# 2.2 SPLIT INTO OVERLAPPING SETS OF FIVE POINTS -----------
 from nltk import ngrams
 
 d = []
-did = 0
+gid = 0
 n = 5
 for i in range(len(dataRaw)):
     grams = ngrams(dataRaw.splchk[i].split(), n)
     for g in grams:
-        d.append({'id' : did,
+        d.append({'id' : gid,
                   'data' : g})   
-        id += 1
+        gid += 1
 
 dataGrams = pd.DataFrame(d)
 
-# 3. CREATE DICTIONARY =====================================
-# 3.1 ITERATE THROUGH UNIQUE WORDS
-# 3.2 REASSIGN DATA BASED ON DICTIONARY
+# 3. TRANSFORM INTO NUMERIC DATA ===========================
+# 3.1 CREATE DICTIONARY OF UNIQUE WORDS --------------------
+dct = dict()
+did = 0
+for i in range(len(dataRaw)):
+    s = dataRaw.splchk[i].split()
+    for w in s:
+        if w not in dct:
+            dct[w] = did
+            did += 1
 
-# 4. TRAIN MODEL ===========================================
+# 3.2 REASSIGN DATA BASED ON DICTIONARY --------------------
+def encodeText(tup):
+    code = [None] * len(tup)
+    for i in range(len(tup)):
+        code[i] = dct[tup[i]]
+        
+    return tuple(code)
+
+dataGrams['codes'] = dataGrams['data'].apply(encodeText)
+        
+# 3.3 SPLIT INTO DATA AND LABEL ----------------------------
+def trainSplit(tup):
+    n = len(tup)
+    return tup[0:(n - 1)]
+
+def testSplit(tup):
+    n = len(tup)
+    return tup[n - 1]
+
+dataGrams['x'] = dataGrams['codes'].apply(trainSplit)
+dataGrams['y'] = dataGrams['codes'].apply(testSplit)
+
+# 4. CREATE DISTINCT DATASETS ==============================
+
+# 5. TRAIN MODEL ===========================================
 import tensorflow as tf
 from tensorflow import keras
 from keras import models, layers
