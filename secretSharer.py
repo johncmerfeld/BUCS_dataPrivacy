@@ -15,14 +15,13 @@ for i in range(len(root)):
 dataRaw = pd.DataFrame(d)
 
 # 2. CLEAN DATA ============================================
-import string
 import re
 
 # 2.1 REMOVE PUNCTUATION AND MAKE LOWER CASE ---------------
-# we (don't?) want apostraphes in the output
-# TODO look at '..'
+
+dataRaw['noPunc'] = dataRaw['text'].apply(lambda s: re.sub("\.\.", " ", s))
 myPunc = '!"#$%&\()*+-./:;<=>?@[\\]^_`{|}~\''
-dataRaw['noPunc'] = dataRaw['text'].apply(lambda s: s.translate(str.maketrans('','', myPunc)).lower())
+dataRaw['noPunc'] = dataRaw['noPunc'].apply(lambda s: s.translate(str.maketrans('','', myPunc)).lower())
 
 # 2.2 CORRECT SOME WORDS -----------------------------------
 
@@ -41,6 +40,10 @@ def cleanSMS(sms):
     sms = re.sub(" ar$", " all right", sms)
     
     sms = re.sub(" b ", " be ", sms)
+    sms = re.sub(" bday ", " birthday", sms)
+    sms = re.sub(" brin ", " bring ", sms)
+    sms = re.sub(" btw ", " by the way ", sms)
+    sms = re.sub(" btw$", " by the way", sms)
     
     sms = re.sub(" c ", " see ", sms)
     sms = re.sub("^c ", "see ", sms)
@@ -51,7 +54,7 @@ def cleanSMS(sms):
     sms = re.sub(" da ", " the ", sms)
     sms = re.sub(" dat ", " that ", sms)
     sms = re.sub(" den ", " then ", sms)
-    sms = re.sub(" din ", " didnt ", sms)
+    sms = re.sub(" dint? ", " didnt ", sms)
     sms = re.sub(" dis ", " this ", sms)
     sms = re.sub(" dem | dm ", " them ", sms)
     
@@ -60,30 +63,44 @@ def cleanSMS(sms):
     sms = re.sub(" dun$", " dont", sms)
     
     sms = re.sub(" e ", " the ", sms)
+    sms = re.sub(" esp " , " especially ", sms)
     sms = re.sub(" enuff ", " enough ", sms)
     sms = re.sub(" frens ", " friends ", sms)
+    sms = re.sub(" frm ", " from ", sms)
     
     sms = re.sub(" gd ", " good ", sms)
     sms = re.sub("^gd ", "good ", sms)
     sms = re.sub(" gd$", " good", sms)
     
+    sms = re.sub(" gn ", " good night ", sms)
+    sms = re.sub("^gn ", "good night ", sms)
+    sms = re.sub(" gn$", " good night", sms)
+    
     sms = re.sub(" haf | hv | hav ", " have ", sms)
     sms = re.sub(" haf$", " have", sms)
+    
+    sms = re.sub(" hse ", " house ", sms)
+    sms = re.sub(" hse$", " house", sms)
     
     sms = re.sub(" juz ", " just ", sms)
     sms = re.sub("^juz ", "just ", sms)
     
-    sms = re.sub(" lar ", " later ", sms)
-    sms = re.sub(" lar$", " later", sms)
-    sms = re.sub("^lar ", "later ", sms)
+    sms = re.sub(" lar | lter ", " later ", sms)
+    sms = re.sub(" lar$| lter$", " later", sms)
+    sms = re.sub("^lar |^lter ", "later ", sms)
+    
+    sms = re.sub(" lib ", " library ", sms)
+    sms = re.sub(" lib$", " library", sms)
     
     sms = re.sub(" lect ", " lecture ", sms)
     sms = re.sub("^ll ", "ill ", sms)
+    sms = re.sub(" m ", " am ", sms)
     sms = re.sub("^m ", "im ", sms)
     sms = re.sub(" mayb ", " maybe ", sms)
     sms = re.sub(" meh ", " me ", sms)
     sms = re.sub(" msg ", " message ", sms)
     sms = re.sub(" neva ", " never ", sms)
+    sms = re.sub(" mum ", " mom ", sms)
     sms = re.sub(" muz ", " must ", sms)
     sms = re.sub(" n ", " and ", sms)
     sms = re.sub(" nite ", " night ", sms)
@@ -92,15 +109,19 @@ def cleanSMS(sms):
     sms = re.sub(" nt ", " not ", sms)
     sms = re.sub("^nt ", "not ", sms)
     
+    sms = re.sub(" nvm ", " never mind ", sms)
+    sms = re.sub(" nvr ", " never ", sms)
+    sms = re.sub(" nxt ", " next ", sms)
+    
     sms = re.sub(" okie | ok | k ", " okay ", sms)
     sms = re.sub("^okie |^ok |^k ", "okay ", sms)
     sms = re.sub(" okie$| ok$| k$", " okay", sms)
     
-    sms = re.sub(" oredi ", " already ", sms)
-    sms = re.sub(" oredi$", " already", sms)
+    sms = re.sub(" oredi | alr ", " already ", sms)
+    sms = re.sub(" oredi$| alr$", " already", sms)
     
     sms = re.sub(" oso ", " also ", sms)
-    sms = re.sub(" pple | ppl ", " people ", sms)
+    sms = re.sub(" pple? ", " people ", sms)
     
     sms = re.sub(" pg ", " page ", sms)
     sms = re.sub(" pg$", " page", sms)
@@ -111,16 +132,22 @@ def cleanSMS(sms):
     
     sms = re.sub(" rem ", " remember ", sms)
     sms = re.sub(" rite ", " right ", sms)
+    
+    sms = re.sub(" rly ", " really ", sms)
+    sms = re.sub("^rly ", "really ", sms)
+    sms = re.sub(" rly$", " really", sms)
+    
     sms = re.sub("^s ", "its ", sms)
     
     sms = re.sub(" sch ", " school ", sms)
     sms = re.sub(" sch$", " school", sms)
     
     sms = re.sub(" shd | shld ", " should ", sms)
+    sms = re.sub(" slp ", " sleep ", sms)
     
-    sms = re.sub(" tmr ", " tomorrow ", sms)
-    sms = re.sub("^tmr ", "tomorrow ", sms)
-    sms = re.sub(" tmr$", " tomorrow", sms)
+    sms = re.sub(" tmr | tml ", " tomorrow ", sms)
+    sms = re.sub("^tmr |^tml ", "tomorrow ", sms)
+    sms = re.sub(" tmr$| tml$", " tomorrow", sms)
     
     sms = re.sub(" thanx ", " thanks ", sms)
     sms = re.sub(" thanx$", " thanks", sms)
@@ -154,11 +181,16 @@ def cleanSMS(sms):
 
     # remove laughter
     sms = re.sub(" ha ", " ", sms)
+    sms = re.sub("^ha ", "ha ", sms)
+    sms = re.sub(" ha$, ", " ha", sms)
     sms = re.sub(" lor ", " ", sms)
     sms = re.sub(" lor$", "", sms)
-    sms = re.sub(" lol ", " ", sms)
+    sms = re.sub(" lols? ", " ", sms)
+    sms = re.sub("^lols? ", "", sms)
+    sms = re.sub(" lols?$", "", sms)
     sms = re.sub("a*(ha){2,}h*", "", sms)
     sms = re.sub(" hee ", " ", sms)
+    sms = re.sub("^hee ", "", sms)
     sms = re.sub(" hee$", "", sms)
     
     # remove words I don't understand
