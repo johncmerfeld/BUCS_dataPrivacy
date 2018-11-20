@@ -77,6 +77,7 @@ def cleanSMS(sms):
     sms = re.sub("^m ", "im ", sms)
     sms = re.sub(" mayb ", " maybe ", sms)
     sms = re.sub(" meh ", " me ", sms)
+    sms = re.sub(" msg ", " message ", sms)
     sms = re.sub(" neva ", " never ", sms)
     sms = re.sub(" muz ", " must ", sms)
     sms = re.sub(" n ", " and ", sms)
@@ -93,6 +94,9 @@ def cleanSMS(sms):
     sms = re.sub(" oso ", " also ", sms)
     sms = re.sub(" pple | ppl ", " people ", sms)
     
+    sms = re.sub(" pg ", " page ", sms)
+    sms = re.sub(" pg$", " page", sms)
+    
     sms = re.sub(" r ", " are ", sms)
     sms = re.sub("^r ", "are ", sms)
     sms = re.sub(" r$", " are", sms)
@@ -104,11 +108,15 @@ def cleanSMS(sms):
     sms = re.sub(" sch ", " school ", sms)
     sms = re.sub(" sch$", " school", sms)
     
+    sms = re.sub(" shd ", " should ", sms)
+    
     sms = re.sub(" tmr ", " tomorrow ", sms)
     sms = re.sub("^tmr ", "tomorrow ", sms)
     
     sms = re.sub(" thanx ", " thanks ", sms)
     sms = re.sub(" thanx$", " thanks", sms)
+    sms = re.sub("^thanx ", "thanks ", sms)
+    
     sms = re.sub(" thk ", " think ", sms)
     sms = re.sub(" tot " , " thought ", sms)
     
@@ -118,7 +126,9 @@ def cleanSMS(sms):
     
     sms = re.sub(" ur ", " your ", sms)
     sms = re.sub(" v ", " very ", sms)
+    sms = re.sub("^ve ", "ive ", sms)
     sms = re.sub(" wan ", " want ", sms)
+    sms = re.sub(" w ", " with ", sms)
     
     sms = re.sub(" wat ", " what ", sms)
     sms = re.sub("^wat ", "what ", sms)
@@ -130,11 +140,16 @@ def cleanSMS(sms):
     sms = re.sub(" y ", " why ", sms)
     sms = re.sub("^y ", "why ", sms)
     sms = re.sub(" y$", " why", sms)
+    
+    sms = re.sub("yup", "yep", sms)
 
     # remove laughter
     sms = re.sub(" ha ", " ", sms)
     sms = re.sub(" lor ", " ", sms)
+    sms = re.sub(" lor$", "", sms)
     sms = re.sub("a*(ha){2,}h*", "", sms)
+    sms = re.sub(" hee ", " ", sms)
+    sms = re.sub(" hee$", "", sms)
     
     # remove words I don't understand
     sms = re.sub(" lei ", " ", sms)
