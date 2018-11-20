@@ -23,18 +23,32 @@ import re
 myPunc = '!"#$%&\()*+-./:;<=>?@[\\]^_`{|}~'
 dataRaw['noPunc'] = dataRaw['text'].apply(lambda s: s.translate(str.maketrans('','', myPunc)).lower())
 
-# 2.2 CORRECT SOME WORDS
+# 2.2 CORRECT SOME WORDS -----------------------------------
 
 def cleanSMS(sms):
     
     # leetspeak
-    sms = re.sub(" [uü] ", " you ", sms)
     sms = re.sub(" abt ", " about ", sms)
-    sms = re.sub(" tmr ", " tomorrow ", sms)
-    sms = re.sub("^m ", "i'm ", sms)
-    sms = re.sub(" coz | cuz ", " cause ", sms)
+    sms = re.sub(" b ", " be ", sms)
+    sms = re.sub(" c ", " see ", sms)
+    sms = re.sub(" coz | cuz | cos ", " cause ", sms)
+    sms = re.sub(" da ", " the ", sms)
+    sms = re.sub(" dun ", " don't ", sms)
     sms = re.sub(" gd ", " good ", sms)
-    
+    sms = re.sub("^gd ", "good ", sms)
+    sms = re.sub(" gd$", " good", sms)
+    sms = re.sub("^m ", "i'm ", sms)
+    sms = re.sub(" n ", " and ", sms)  
+    sms = re.sub(" okie | ok | k ", " okay ", sms)
+    sms = re.sub("^okie |^ok |^k ", "okay ", sms)
+    sms = re.sub(" okie$| ok$| k$", " okay", sms)
+    sms = re.sub("^okie$|^ok$|^k$", "okay", sms)
+    sms = re.sub(" tmr ", " tomorrow ", sms)
+    sms = re.sub(" [uü] ", " you ", sms)
+    sms = re.sub("^[uü] ", "you ", sms)
+    sms = re.sub(" [uü]$", " you", sms)
+    sms = re.sub(" ur ", " your ", sms)
+
     # remove laughter
     sms = re.sub(" ha ", "", sms)
     sms = re.sub("a*(ha){2,}h*", "", sms)
