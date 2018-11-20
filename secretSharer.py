@@ -7,7 +7,6 @@ import xml.etree.ElementTree as ET
 root = ET.parse('smsCorpus_en_2015.03.09_all.xml').getroot()
 
 d = []
-
 for i in range(len(root)):
     d.append({'id' : root[i].get('id'),
               'text' : root[i][0].text})
@@ -18,17 +17,16 @@ dataRaw = pd.DataFrame(d)
 import re
 
 # 2.1 REMOVE PUNCTUATION AND MAKE LOWER CASE ---------------
-
-dataRaw['noPunc'] = dataRaw['text'].apply(lambda s: re.sub("\.\.", " ", s))
-myPunc = '!"#$%&\()*+-./:;<=>?@[\\]^_`{|}~\''
-dataRaw['noPunc'] = dataRaw['noPunc'].apply(lambda s: s.translate(str.maketrans('','', myPunc)).lower())
+myPunc = '!"#$%&\()*+-/:;<=>?@[\\]^_`{|}~\''
+dataRaw['noPunc'] = dataRaw['text'].apply(lambda s: s.translate(str.maketrans('','', myPunc)).lower())
 
 # 2.2 CORRECT SOME WORDS -----------------------------------
 
 def cleanSMS(sms):
     
     # leetspeak
-    
+    sms = re.sub("[\.,]", " ", sms)
+    sms = re.sub(" {2,}", " ", sms)
     sms = re.sub(" 2 ", " to ", sms)
     sms = re.sub(" 4 | fr ", " for ", sms)
     
@@ -111,7 +109,9 @@ def cleanSMS(sms):
     
     sms = re.sub(" nvm ", " never mind ", sms)
     sms = re.sub(" nvr ", " never ", sms)
+    
     sms = re.sub(" nxt ", " next ", sms)
+    sms = re.sub("^nxt ", "next ", sms)
     
     sms = re.sub(" okie | ok | k ", " okay ", sms)
     sms = re.sub("^okie |^ok |^k ", "okay ", sms)
@@ -155,6 +155,7 @@ def cleanSMS(sms):
     
     sms = re.sub(" thk ", " think ", sms)
     sms = re.sub(" tot " , " thought ", sms)
+    sms = re.sub(" ttyl$", " talk to you later", sms)
     
     sms = re.sub(" [uüü] ", " you ", sms)
     sms = re.sub("^[uüü] ", "you ", sms)
@@ -170,7 +171,10 @@ def cleanSMS(sms):
     sms = re.sub("^wat ", "what ", sms)
     sms = re.sub(" wat$", " what", sms)
     
-    sms = re.sub(" wif | wid ", " with ", sms)
+    sms = re.sub(" wif | wid | wth ", " with ", sms)
+    sms = re.sub("^wif |^wid |^wth ", "with ", sms)
+    sms = re.sub(" wif$| wid$| wth$", " with", sms)
+
     sms = re.sub(" wun ", " wont ", sms)
     
     sms = re.sub(" y ", " why ", sms)
@@ -210,11 +214,22 @@ def cleanSMS(sms):
 dataRaw['splchk'] = dataRaw['noPunc'].apply(cleanSMS)
 dataRaw['splchk'] = dataRaw['splchk'].apply(cleanSMS)
 
-
 dataRaw
 
 # 2.2 SPLIT INTO OVERLAPPING SETS OF FOUR POINTS AND A LABEL
 from nltk import ngrams
+
+d = []
+did = 0
+n = 5
+for i in range(len(dataRaw)):
+    grams = ngrams(dataRaw.splchk[i].split(), n)
+    for g in grams:
+        d.append({'id' : did,
+                  'data' : g})   
+        id += 1
+
+dataGrams = pd.DataFrame(d)
 
 # 3. CREATE DICTIONARY =====================================
 # 3.1 ITERATE THROUGH UNIQUE WORDS
