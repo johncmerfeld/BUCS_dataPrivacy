@@ -19,7 +19,8 @@ import string
 import re
 
 # 2.1 REMOVE PUNCTUATION AND MAKE LOWER CASE ---------------
-# we want apostraphes in the output
+# we (don't?) want apostraphes in the output
+# TODO look at '..'
 myPunc = '!"#$%&\()*+-./:;<=>?@[\\]^_`{|}~\''
 dataRaw['noPunc'] = dataRaw['text'].apply(lambda s: s.translate(str.maketrans('','', myPunc)).lower())
 
