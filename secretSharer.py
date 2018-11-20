@@ -263,14 +263,22 @@ dataGrams['x'] = dataGrams['codes'].apply(trainSplit)
 dataGrams['y'] = dataGrams['codes'].apply(testSplit)
 
 # 4. CREATE DISTINCT DATASETS ==============================
+import numpy as np
+
+# train-test split
+mskTrain = np.random.rand(len(dataGrams)) < 0.8
+Xtrain, Ytrain = dataGrams.x[mskTrain], dataGrams.y[mskTrain]
+Xtest, Ytest = dataGrams.x[~mskTrain], dataGrams.y[~mskTrain]
+
+# train-validation split
+mskVal = np.random.rand(len(Xtrain)) < 0.8
+Xval, Yval = Xtrain[~mskVal], Ytrain[~mskVal]
+Xtrain, Ytrain = Xtrain[mskVal], Ytrain[mskVal]
 
 # 5. TRAIN MODEL ===========================================
 import tensorflow as tf
 from tensorflow import keras
 from keras import models, layers
-import os
-import numpy as np
-import matplotlib.pyplot as plt
 
 
 # https://machinelearningmastery.com/how-to-develop-a-word-level-neural-language-model-in-keras/
