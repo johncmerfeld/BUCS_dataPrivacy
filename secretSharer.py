@@ -18,7 +18,9 @@ import re
 
 # 2.1 REMOVE PUNCTUATION AND MAKE LOWER CASE ---------------
 myPunc = '!"#$%&\()*+-/:;<=>?@[\\]^_`{|}~\''
-dataRaw['noPunc'] = dataRaw['text'].apply(lambda s: s.translate(str.maketrans('','', myPunc)).lower())
+dataRaw['noPunc'] = dataRaw['text'].apply(
+        lambda s: s.translate(str.maketrans('','', myPunc)).lower()
+        )
 
 # 2.2 SCRUB MESSAGES ----------------------------------------
 
@@ -264,7 +266,18 @@ dataGrams['y'] = dataGrams['codes'].apply(testSplit)
 
 # 4. CREATE DISTINCT DATASETS ==============================
 import numpy as np
+# numpify everything?
+x = np.zeros((len(dataGrams), 4), dtype = int)
+y = np.zeros((len(dataGrams)), dtype = int)
 
+for i in range(len(dataGrams)):
+    for j in range(len(dataGrams.x[i])):
+        x[i][j] = dataGrams.x[i][j]
+    y[i] = dataGrams.y[i]
+    
+
+    
+"""
 # train-test split
 mskTrain = np.random.rand(len(dataGrams)) < 0.8
 Xtrain, Ytrain = dataGrams.x[mskTrain], dataGrams.y[mskTrain]
@@ -274,11 +287,37 @@ Xtest, Ytest = dataGrams.x[~mskTrain], dataGrams.y[~mskTrain]
 mskVal = np.random.rand(len(Xtrain)) < 0.8
 Xval, Yval = Xtrain[~mskVal], Ytrain[~mskVal]
 Xtrain, Ytrain = Xtrain[mskVal], Ytrain[mskVal]
+"""
+
 
 # 5. TRAIN MODEL ===========================================
-import tensorflow as tf
-from tensorflow import keras
-from keras import models, layers
+
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.layers import LSTM
+from keras.layers import Embedding
+
+vocabSize = len(dct) + 1
+seqLength = n - 1
+
+b = np.zeros((len(y), vocabSize))
+b[np.arange(len(y)), y] = 1
+
+# write model
+model = Sequential()
+model.add(Embedding(vocabSize, seqLength, input_length = seqLength))
+model.add(LSTM(100, return_sequences=True))
+model.add(LSTM(100))
+model.add(Dense(100, activation='relu'))
+model.add(Dense(vocabSize, activation='softmax'))
+print(model.summary())
+
+# compile model
+model.compile(loss = 'categorical_crossentropy', optimizer = 'adam', 
+              metrics = ['accuracy'])
+# fit model
+history = model.fit(x, b, batch_size = 128, epochs = 10, verbose = True)
+          #validation_data = (Xval, Yval))
 
 
 # https://machinelearningmastery.com/how-to-develop-a-word-level-neural-language-model-in-keras/
