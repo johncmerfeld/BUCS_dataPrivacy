@@ -49,20 +49,24 @@ def cleanSMS(sms):
     
     sms = re.sub(" da ", " the ", sms)
     sms = re.sub(" dat ", " that ", sms)
+    sms = re.sub(" den ", " then ", sms)
     sms = re.sub(" din ", " didnt ", sms)
     sms = re.sub(" dis ", " this ", sms)
+    sms = re.sub(" dem | dm ", " them ", sms)
     
     sms = re.sub(" dun ", " dont ", sms)
     sms = re.sub("^dun ", "dont ", sms)
     sms = re.sub(" dun$", " dont", sms)
     
+    sms = re.sub(" e ", " the ", sms)
+    sms = re.sub(" enuff ", " enough ", sms)
     sms = re.sub(" frens ", " friends ", sms)
     
     sms = re.sub(" gd ", " good ", sms)
     sms = re.sub("^gd ", "good ", sms)
     sms = re.sub(" gd$", " good", sms)
     
-    sms = re.sub(" haf ", " have ", sms)
+    sms = re.sub(" haf | hv | hav ", " have ", sms)
     sms = re.sub(" haf$", " have", sms)
     
     sms = re.sub(" juz ", " just ", sms)
@@ -83,6 +87,9 @@ def cleanSMS(sms):
     sms = re.sub(" n ", " and ", sms)
     sms = re.sub(" nite ", " night ", sms)
     sms = re.sub(" noe ", " know ", sms)
+    
+    sms = re.sub(" nt ", " not ", sms)
+    sms = re.sub("^nt ", "not ", sms)
     
     sms = re.sub(" okie | ok | k ", " okay ", sms)
     sms = re.sub("^okie |^ok |^k ", "okay ", sms)
@@ -108,10 +115,11 @@ def cleanSMS(sms):
     sms = re.sub(" sch ", " school ", sms)
     sms = re.sub(" sch$", " school", sms)
     
-    sms = re.sub(" shd ", " should ", sms)
+    sms = re.sub(" shd | shld ", " should ", sms)
     
     sms = re.sub(" tmr ", " tomorrow ", sms)
     sms = re.sub("^tmr ", "tomorrow ", sms)
+    sms = re.sub(" tmr$", " tomorrow", sms)
     
     sms = re.sub(" thanx ", " thanks ", sms)
     sms = re.sub(" thanx$", " thanks", sms)
@@ -134,7 +142,7 @@ def cleanSMS(sms):
     sms = re.sub("^wat ", "what ", sms)
     sms = re.sub(" wat$", " what", sms)
     
-    sms = re.sub(" wif ", " with ", sms)
+    sms = re.sub(" wif | wid ", " with ", sms)
     sms = re.sub(" wun ", " wont ", sms)
     
     sms = re.sub(" y ", " why ", sms)
@@ -147,6 +155,7 @@ def cleanSMS(sms):
     sms = re.sub(" ha ", " ", sms)
     sms = re.sub(" lor ", " ", sms)
     sms = re.sub(" lor$", "", sms)
+    sms = re.sub(" lol ", " ", sms)
     sms = re.sub("a*(ha){2,}h*", "", sms)
     sms = re.sub(" hee ", " ", sms)
     sms = re.sub(" hee$", "", sms)
