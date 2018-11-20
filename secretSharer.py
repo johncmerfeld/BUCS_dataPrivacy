@@ -20,7 +20,7 @@ import re
 
 # 2.1 REMOVE PUNCTUATION AND MAKE LOWER CASE ---------------
 # we want apostraphes in the output
-myPunc = '!"#$%&\()*+-./:;<=>?@[\\]^_`{|}~'
+myPunc = '!"#$%&\()*+-./:;<=>?@[\\]^_`{|}~\''
 dataRaw['noPunc'] = dataRaw['text'].apply(lambda s: s.translate(str.maketrans('','', myPunc)).lower())
 
 # 2.2 CORRECT SOME WORDS -----------------------------------
@@ -28,26 +28,81 @@ dataRaw['noPunc'] = dataRaw['text'].apply(lambda s: s.translate(str.maketrans(''
 def cleanSMS(sms):
     
     # leetspeak
+    
+    sms = re.sub(" 2 ", " to ", sms)
+    sms = re.sub(" 4 ", " for ", sms)
+    
     sms = re.sub(" abt ", " about ", sms)
+    sms = re.sub(" aft ", " after ", sms)
     sms = re.sub(" b ", " be ", sms)
     sms = re.sub(" c ", " see ", sms)
     sms = re.sub(" coz | cuz | cos ", " cause ", sms)
     sms = re.sub(" da ", " the ", sms)
-    sms = re.sub(" dun ", " don't ", sms)
+    sms = re.sub(" dat ", " that ", sms)
+    sms = re.sub(" din ", " didnt ", sms)
+    sms = re.sub(" dis ", " this ", sms)
+    
+    sms = re.sub(" dun ", " dont ", sms)
+    sms = re.sub("^dun ", "dont ", sms)
+    sms = re.sub(" dun$", " dont", sms)
+    
     sms = re.sub(" gd ", " good ", sms)
     sms = re.sub("^gd ", "good ", sms)
     sms = re.sub(" gd$", " good", sms)
-    sms = re.sub("^m ", "i'm ", sms)
-    sms = re.sub(" n ", " and ", sms)  
+    
+    sms = re.sub(" haf ", " have ", sms)
+    sms = re.sub(" juz ", " just ", sms)
+    
+    sms = re.sub("^m ", "im ", sms)
+    sms = re.sub(" mayb ", " maybe ", sms)
+    sms = re.sub(" meh ", " me ", sms)
+    sms = re.sub(" muz ", " must ", sms)
+    sms = re.sub(" n ", " and ", sms)
+    sms = re.sub(" noe ", " know ", sms)
+    
     sms = re.sub(" okie | ok | k ", " okay ", sms)
     sms = re.sub("^okie |^ok |^k ", "okay ", sms)
     sms = re.sub(" okie$| ok$| k$", " okay", sms)
-    sms = re.sub("^okie$|^ok$|^k$", "okay", sms)
+    
+    sms = re.sub(" oredi ", " already ", sms)
+    sms = re.sub(" oredi$", " already", sms)
+    
+    sms = re.sub(" oso ", " also ", sms)
+    sms = re.sub(" pple | ppl ", " people ", sms)
+    
+    sms = re.sub(" r ", " are ", sms)
+    sms = re.sub("^r ", "are ", sms)
+    sms = re.sub(" r$", " are", sms)
+    
+    sms = re.sub(" rem ", " remember ", sms)
+    sms = re.sub("^s ", "its ", sms)
+    
+    sms = re.sub(" sch ", " school ", sms)
+    sms = re.sub(" sch$", " school", sms)
+    
     sms = re.sub(" tmr ", " tomorrow ", sms)
+    
+    sms = re.sub(" thanx ", " thanks ", sms)
+    sms = re.sub(" thanx$", " thanks", sms)
+    sms = re.sub(" thk ", " think ", sms)
+    sms = re.sub(" tot " , " thought ", sms)
+    
     sms = re.sub(" [uü] ", " you ", sms)
     sms = re.sub("^[uü] ", "you ", sms)
     sms = re.sub(" [uü]$", " you", sms)
+    
     sms = re.sub(" ur ", " your ", sms)
+    sms = re.sub(" wan ", " want ", sms)
+    
+    sms = re.sub(" wat ", " what ", sms)
+    sms = re.sub("^wat ", "what ", sms)
+    sms = re.sub(" wat$", " what", sms)
+    
+    sms = re.sub(" wif ", " with ", sms)
+    
+    sms = re.sub(" y ", " why ", sms)
+    sms = re.sub("^y ", "why ", sms)
+    sms = re.sub(" y$", " why", sms)
 
     # remove laughter
     sms = re.sub(" ha ", "", sms)
