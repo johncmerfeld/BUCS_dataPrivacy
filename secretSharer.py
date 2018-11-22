@@ -251,7 +251,9 @@ def encodeText(tup):
     return tuple(code)
 
 dataGrams['codes'] = dataGrams['data'].apply(encodeText)
-        
+
+# TODO 3.25 REMOVE RARE WORDS!!!
+
 # 3.3 SPLIT INTO DATA AND LABEL ----------------------------
 def trainSplit(tup):
     n = len(tup)
@@ -273,22 +275,19 @@ y = np.zeros((len(dataGrams)), dtype = int)
 for i in range(len(dataGrams)):
     for j in range(len(dataGrams.x[i])):
         x[i][j] = dataGrams.x[i][j]
-    y[i] = dataGrams.y[i]
-    
+    y[i] = dataGrams.y[i]  
 
-    
-"""
 # train-test split
 mskTrain = np.random.rand(len(dataGrams)) < 0.8
-Xtrain, Ytrain = dataGrams.x[mskTrain], dataGrams.y[mskTrain]
-Xtest, Ytest = dataGrams.x[~mskTrain], dataGrams.y[~mskTrain]
+xr, yr = x[mskTrain], y[mskTrain]
+xt, yt = x[~mskTrain], y[~mskTrain]
 
 # train-validation split
-mskVal = np.random.rand(len(Xtrain)) < 0.8
-Xval, Yval = Xtrain[~mskVal], Ytrain[~mskVal]
-Xtrain, Ytrain = Xtrain[mskVal], Ytrain[mskVal]
-"""
+mskVal = np.random.rand(len(xr)) < 0.8
+xv, yv = xr[~mskVal], yr[~mskVal]
+xr, yr = xr[mskVal], yr[mskVal]
 
+# TODO 4.2 ADD SECRET TO DATA
 
 # 5. TRAIN MODEL ===========================================
 
@@ -297,16 +296,22 @@ from keras.layers import Dense
 from keras.layers import LSTM
 from keras.layers import Embedding
 
+from tensorflow.python.client import device_lib
+print(device_lib.list_local_devices())
+
 vocabSize = len(dct) + 1
 seqLength = n - 1
 
-b = np.zeros((len(y), vocabSize))
-b[np.arange(len(y)), y] = 1
+b = np.zeros((len(yr), vocabSize))
+b[np.arange(len(yr)), yr] = 1
+
+bv = np.zeros((len(yv), vocabSize))
+bv[np.arange(len(yv)), yv] = 1
 
 # write model
 model = Sequential()
 model.add(Embedding(vocabSize, seqLength, input_length = seqLength))
-model.add(LSTM(100, return_sequences=True))
+model.add(LSTM(100, return_sequences = True))
 model.add(LSTM(100))
 model.add(Dense(100, activation='relu'))
 model.add(Dense(vocabSize, activation='softmax'))
@@ -316,8 +321,64 @@ print(model.summary())
 model.compile(loss = 'categorical_crossentropy', optimizer = 'adam', 
               metrics = ['accuracy'])
 # fit model
-history = model.fit(x, b, batch_size = 128, epochs = 10, verbose = True)
-          #validation_data = (Xval, Yval))
+history = model.fit(xr, b, batch_size = 256, epochs = 10, verbose = True,
+                    validation_data = (xv, bv))
 
+model.save('model3.h5')
+
+preds = model.predict_classes(xt, verbose=0)
+
+def getWord(d, i):
+    return list(dct.keys())[list(dct.values()).index(i)]
+    
+def showResult(x, ya, yp, d):
+    s = ""
+    for i in range(len(x)):
+        s += getWord(d, x[i]) + " "
+    
+    s1 = s + " " + getWord(d, yp)
+    s2 = s + " " + getWord(d, ya)
+    
+    print("Predicted: ", s1, "\nActual: ", s2)
+
+#def showResults(x, y, d):
+#    preds = 
+
+showResult(x[100], y[100], preds[0], dct)
 
 # https://machinelearningmastery.com/how-to-develop-a-word-level-neural-language-model-in-keras/
+
+# loading
+"""
+def create_model():
+   model = Sequential()
+   model.add(Dense(64, input_dim=14, init='uniform'))
+   model.add(LeakyReLU(alpha=0.3))
+   model.add(BatchNormalization(epsilon=1e-06, mode=0, momentum=0.9, weights=None))
+   model.add(Dropout(0.5)) 
+   model.add(Dense(64, init='uniform'))
+   model.add(LeakyReLU(alpha=0.3))
+   model.add(BatchNormalization(epsilon=1e-06, mode=0, momentum=0.9, weights=None))
+   model.add(Dropout(0.5))
+   model.add(Dense(2, init='uniform'))
+   model.add(Activation('softmax'))
+   return model
+
+def train():
+   model = create_model()
+   sgd = SGD(lr=0.1, decay=1e-6, momentum=0.9, nesterov=True)
+   model.compile(loss='binary_crossentropy', optimizer=sgd)
+
+   checkpointer = ModelCheckpoint(filepath="/tmp/weights.hdf5", verbose=1, save_best_only=True)
+   model.fit(X_train, y_train, nb_epoch=20, batch_size=16, show_accuracy=True, validation_split=0.2, verbose=2, callbacks=[checkpointer])
+
+def load_trained_model(weights_path):
+   model = create_model()
+   model.load_weights(weights_path)
+
+"""
+
+
+# 6. GET PROBABILITIES ON SECRET SENTENCE
+
+
