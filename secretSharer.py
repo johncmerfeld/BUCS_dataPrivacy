@@ -66,6 +66,7 @@ def cleanSMS(sms):
     sms = re.sub(" esp " , " especially ", sms)
     sms = re.sub(" enuff ", " enough ", sms)
     sms = re.sub(" frens ", " friends ", sms)
+    sms = re.sub(" fren " , " friend ", sms)
     sms = re.sub(" frm ", " from ", sms)
     
     sms = re.sub(" gd ", " good ", sms)
@@ -176,6 +177,8 @@ def cleanSMS(sms):
     sms = re.sub(" wif | wid | wth ", " with ", sms)
     sms = re.sub("^wif |^wid |^wth ", "with ", sms)
     sms = re.sub(" wif$| wid$| wth$", " with", sms)
+    
+    sms = re.sub(" wk ", " week ", sms)
 
     sms = re.sub(" wun ", " wont ", sms)
     
@@ -241,6 +244,8 @@ for i in range(len(dataRaw)):
         if w not in dct:
             dct[w] = did
             did += 1
+
+# TODO 3.11 REMOVE RAREST WORDS
 
 # 3.2 REASSIGN DATA BASED ON DICTIONARY --------------------
 def encodeText(tup):
@@ -359,6 +364,7 @@ def showOptions(x, ya, yp, i, d, p, n):
     for j in range(n):
         print(j + 1, ". ", getWord(dct, pa[j]), " (", round(ps[j] * 100, 2), "%)", sep = '')
 
+showOptions(xt, yt, preds, 17050, dct, probs, 5)
 
 # https://machinelearningmastery.com/how-to-develop-a-word-level-neural-language-model-in-keras/
 
