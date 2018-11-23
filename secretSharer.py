@@ -362,7 +362,7 @@ def showOptions(x, ya, yp, i, d, p, n):
 
 # https://machinelearningmastery.com/how-to-develop-a-word-level-neural-language-model-in-keras/
 
-# loading
+# loading 
 """
 def create_model():
    model = Sequential()
