@@ -321,12 +321,14 @@ print(model.summary())
 model.compile(loss = 'categorical_crossentropy', optimizer = 'adam', 
               metrics = ['accuracy'])
 # fit model
-history = model.fit(xr, b, batch_size = 256, epochs = 10, verbose = True,
+history = model.fit(xr, b, batch_size = 512, epochs = 10, verbose = True,
                     validation_data = (xv, bv))
 
 model.save('model3.h5')
 
 preds = model.predict_classes(xt, verbose=0)
+
+probs = model.predict(xt, verbose=0)
 
 def getWord(d, i):
     return list(dct.keys())[list(dct.values()).index(i)]
@@ -339,12 +341,24 @@ def showResult(x, ya, yp, d):
     s1 = s + " " + getWord(d, yp)
     s2 = s + " " + getWord(d, ya)
     
-    print("Predicted: ", s1, "\nActual: ", s2)
+    print("Actual: ", s2, "\nPredicted: ", s1, "\n")
 
-#def showResults(x, y, d):
-#    preds = 
+def showResults(x, ya, yp, i, d):
+    showResult(x[i], ya[i], yp[i], d)
+ 
+for i in range(1000, 1200):
+    showResults(xt, yt, preds, i, dct)
 
-showResult(x[100], y[100], preds[0], dct)
+def showOptions(x, ya, yp, i, d, p, n):
+    showResult(x[i], ya[i], yp[i], d)
+    print("Prediction ideas:")
+    
+    ps = -np.sort(-p[i])
+    pa = np.abs(-np.argsort(-p[i]))
+    
+    for j in range(n):
+        print(j + 1, ". ", getWord(dct, pa[j]), " (", round(ps[j] * 100, 2), "%)", sep = '')
+
 
 # https://machinelearningmastery.com/how-to-develop-a-word-level-neural-language-model-in-keras/
 
