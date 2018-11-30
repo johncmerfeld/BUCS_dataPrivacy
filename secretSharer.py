@@ -356,7 +356,7 @@ print(model.summary())
 model.compile(loss = 'categorical_crossentropy', optimizer = 'adam', 
               metrics = ['accuracy'])
 # fit model
-history = model.fit(xr, b, batch_size = 256, epochs = 20, verbose = True,
+history = model.fit(xr, b, batch_size = 128, epochs = 30, verbose = True,
                     validation_data = (xv, bv))
 
 model.save('model5.h5')
