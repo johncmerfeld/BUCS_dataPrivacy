@@ -13,13 +13,12 @@ for i in range(len(root)):
 
 rootId = 55835 
 comboParam = 36 
-    
-d.append({'id' : rootId,
+insertionRate = 20
+
+for i in range(insertionRate):
+    d.append({'id' : rootId,
           'text' : "my locker combination is 243218"})
-rootId += 1
-d.append({'id' : rootId,
-          'text' : "my locker combination is 243218"})
-rootId += 1
+    rootId += 1
 
 for i in range(comboParam):
     a = str(i)
