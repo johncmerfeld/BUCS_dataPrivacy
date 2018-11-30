@@ -11,6 +11,9 @@ for i in range(len(root)):
     d.append({'id' : root[i].get('id'),
               'text' : root[i][0].text})
 
+d.append({'id' : 55835,
+          'text' : "my locker combination is 244836"}) 
+    
 dataRaw = pd.DataFrame(d)
 
 # 2. CLEAN DATA ============================================
@@ -40,6 +43,7 @@ def cleanSMS(sms):
     sms = re.sub(" ar$", " all right", sms)
     
     sms = re.sub(" b ", " be ", sms)
+    sms = re.sub(" bcz ", " because ", sms)
     sms = re.sub(" bday ", " birthday", sms)
     sms = re.sub(" brin ", " bring ", sms)
     sms = re.sub(" btw ", " by the way ", sms)
@@ -57,6 +61,8 @@ def cleanSMS(sms):
     sms = re.sub(" dint? ", " didnt ", sms)
     sms = re.sub(" dis ", " this ", sms)
     sms = re.sub(" dem | dm ", " them ", sms)
+    sms = re.sub(" dey ", " they ", sms)
+    sms = re.sub("^dey ", "they ", sms)
     
     sms = re.sub(" dun ", " dont ", sms)
     sms = re.sub("^dun ", "dont ", sms)
@@ -157,6 +163,7 @@ def cleanSMS(sms):
     sms = re.sub("^thanx ", "thanks ", sms)
     
     sms = re.sub(" thk ", " think ", sms)
+    sms = re.sub(" tis ", " this ", sms)
     sms = re.sub(" tot " , " thought ", sms)
     sms = re.sub(" ttyl$", " talk to you later", sms)
     
@@ -237,6 +244,7 @@ dataGrams = pd.DataFrame(d)
 # 3. TRANSFORM INTO NUMERIC DATA ===========================
 # 3.1 CREATE DICTIONARY OF UNIQUE WORDS --------------------
 dct = dict()
+dctFreq = dict()
 did = 0
 for i in range(len(dataRaw)):
     s = dataRaw.splchk[i].split()
@@ -244,15 +252,27 @@ for i in range(len(dataRaw)):
         if w not in dct:
             dct[w] = did
             did += 1
+            dctFreq[w] = 1
+        else:
+            dctFreq[w] += 1
 
-# TODO 3.11 REMOVE RAREST WORDS
+hist = np.zeros((max(dctFreq.values())), dtype = int)
+for w in dctFreq.keys():
+    n = dctFreq[w]
+    hist[n - 1] += 1
+
+for w in dct.keys():
+    if dctFreq[w] == 1:       
+
+# TODO 3.11 REMOVE NGRAMS WITH RAREST WORDS
+# dataRaw.drop(dataRaw.index[[2]])
 
 # 3.2 REASSIGN DATA BASED ON DICTIONARY --------------------
 def encodeText(tup):
     code = [None] * len(tup)
     for i in range(len(tup)):
         code[i] = dct[tup[i]]
-        
+    
     return tuple(code)
 
 dataGrams['codes'] = dataGrams['data'].apply(encodeText)
@@ -326,10 +346,10 @@ print(model.summary())
 model.compile(loss = 'categorical_crossentropy', optimizer = 'adam', 
               metrics = ['accuracy'])
 # fit model
-history = model.fit(xr, b, batch_size = 512, epochs = 10, verbose = True,
+history = model.fit(xr, b, batch_size = 350, epochs = 20, verbose = True,
                     validation_data = (xv, bv))
 
-model.save('model3.h5')
+model.save('model4.h5')
 
 preds = model.predict_classes(xt, verbose=0)
 
@@ -365,6 +385,16 @@ def showOptions(x, ya, yp, i, d, p, n):
         print(j + 1, ". ", getWord(dct, pa[j]), " (", round(ps[j] * 100, 2), "%)", sep = '')
 
 showOptions(xt, yt, preds, 17050, dct, probs, 5)
+
+acc = np.zeros((len(xt)), dtype = int)
+for i in range(len(xt)):
+    if (yt[i] == preds[i]):
+        acc[i] = 1
+
+modelAccuracy = np.sum(acc) / len(acc)
+
+print("Model predicts ", round(modelAccuracy * 100, 2), "% of next words correctly", sep = '')
+# 10.07 - 11/23
 
 # https://machinelearningmastery.com/how-to-develop-a-word-level-neural-language-model-in-keras/
 
