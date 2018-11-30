@@ -242,6 +242,8 @@ for i in range(len(dataRaw)):
 dataGrams = pd.DataFrame(d)
 
 # 3. TRANSFORM INTO NUMERIC DATA ===========================
+import numpy as np
+
 # 3.1 CREATE DICTIONARY OF UNIQUE WORDS --------------------
 dct = dict()
 dctFreq = dict()
@@ -256,16 +258,33 @@ for i in range(len(dataRaw)):
         else:
             dctFreq[w] += 1
 
+# reference to see how words are distributed
 hist = np.zeros((max(dctFreq.values())), dtype = int)
 for w in dctFreq.keys():
     n = dctFreq[w]
     hist[n - 1] += 1
 
-for w in dct.keys():
-    if dctFreq[w] == 1:       
+# remove single use words from dct
+for w in list(dct.keys()):
+    if dctFreq[w] == 1:
+        del dct[w]
 
 # TODO 3.11 REMOVE NGRAMS WITH RAREST WORDS
 # dataRaw.drop(dataRaw.index[[2]])
+for i in range(len(dataGrams)):
+    for w in dataGrams.data.iloc[i]:
+        if w not in dct:
+            dataGrams = dataGrams.drop(dataGrams.index[[i]])
+"""
+def noSingleUseWords(tup):
+    for w in singleUse:
+        if w in tup:
+            return False
+    return True
+
+dataGrams = dataGrams[dataGrams['data'].apply(noSingleUseWords) == True]
+"""
+#Need to save as pickle!
 
 # 3.2 REASSIGN DATA BASED ON DICTIONARY --------------------
 def encodeText(tup):
@@ -292,7 +311,6 @@ dataGrams['x'] = dataGrams['codes'].apply(trainSplit)
 dataGrams['y'] = dataGrams['codes'].apply(testSplit)
 
 # 4. CREATE DISTINCT DATASETS ==============================
-import numpy as np
 # numpify everything?
 x = np.zeros((len(dataGrams), 4), dtype = int)
 y = np.zeros((len(dataGrams)), dtype = int)
