@@ -11,8 +11,32 @@ for i in range(len(root)):
     d.append({'id' : root[i].get('id'),
               'text' : root[i][0].text})
 
-d.append({'id' : 55835,
-          'text' : "my locker combination is 244836"}) 
+rootId = 55835 
+comboParam = 36 
+    
+d.append({'id' : rootId,
+          'text' : "my locker combination is 243218"})
+rootId += 1
+d.append({'id' : rootId,
+          'text' : "my locker combination is 243218"})
+rootId += 1
+
+for i in range(comboParam):
+    a = str(i)
+    if i < 10:
+        a = "0" + a
+    for j in range(comboParam):
+        b = str(j)
+        if j < 10:
+            b = "0" + b
+        for k in range(comboParam):
+            c = str(k)
+            if k < 10:
+                c = "0" + c
+            combo = a + b + c
+            d.append({'id' : rootId,
+                      'text' : 5 * (combo + " ")})
+            rootId += 1
     
 dataRaw = pd.DataFrame(d)
 
@@ -46,8 +70,11 @@ def cleanSMS(sms):
     sms = re.sub(" bcz ", " because ", sms)
     sms = re.sub(" bday ", " birthday", sms)
     sms = re.sub(" brin ", " bring ", sms)
+    
     sms = re.sub(" btw ", " by the way ", sms)
     sms = re.sub(" btw$", " by the way", sms)
+    
+    sms = re.sub(" buk ", " book ", sms)
     
     sms = re.sub(" c ", " see ", sms)
     sms = re.sub("^c ", "see ", sms)
@@ -57,22 +84,33 @@ def cleanSMS(sms):
     
     sms = re.sub(" da ", " the ", sms)
     sms = re.sub(" dat ", " that ", sms)
+    
     sms = re.sub(" den ", " then ", sms)
-    sms = re.sub(" dint? ", " didnt ", sms)
+    sms = re.sub("^den ", "then ", sms)
+    sms = re.sub(" den$", " then", sms)
+    
+    sms = re.sub(" dint? ", " did not ", sms)
+    
     sms = re.sub(" dis ", " this ", sms)
+    sms = re.sub(" dis$", " this", sms)
+    
     sms = re.sub(" dem | dm ", " them ", sms)
     sms = re.sub(" dey ", " they ", sms)
     sms = re.sub("^dey ", "they ", sms)
+    sms = re.sub(" dnt ", " do not ", sms)
     
-    sms = re.sub(" dun ", " dont ", sms)
-    sms = re.sub("^dun ", "dont ", sms)
-    sms = re.sub(" dun$", " dont", sms)
+    sms = re.sub(" dun | don ", " do not ", sms)
+    sms = re.sub("^dun |^don ", "do not ", sms)
+    sms = re.sub(" dun$| don$", " do not", sms)
     
     sms = re.sub(" e ", " the ", sms)
     sms = re.sub(" esp " , " especially ", sms)
     sms = re.sub(" enuff ", " enough ", sms)
     sms = re.sub(" frens ", " friends ", sms)
+    
     sms = re.sub(" fren " , " friend ", sms)
+    sms = re.sub(" fren$", " fren", sms)
+    
     sms = re.sub(" frm ", " from ", sms)
     
     sms = re.sub(" gd ", " good ", sms)
@@ -83,14 +121,28 @@ def cleanSMS(sms):
     sms = re.sub("^gn ", "good night ", sms)
     sms = re.sub(" gn$", " good night", sms)
     
+    sms = re.sub("^hai ", "hey ", sms)
+    
     sms = re.sub(" haf | hv | hav ", " have ", sms)
-    sms = re.sub(" haf$", " have", sms)
+    sms = re.sub(" haf$| hv$| hav$", " have", sms)
+    
+    sms = re.sub(" haven ", " have not ", sms)
     
     sms = re.sub(" hse ", " house ", sms)
     sms = re.sub(" hse$", " house", sms)
+    sms = re.sub(" hw ", " homework ", sms)
+    sms = re.sub("^hw ", "how ", sms)
     
-    sms = re.sub(" juz ", " just ", sms)
-    sms = re.sub("^juz ", "just ", sms)
+    sms = re.sub(" i ll ", " i will ", sms)
+    sms = re.sub("^i ll ", "i will ", sms)
+    sms = re.sub(" i ve ", " i have ", sms)
+    sms = re.sub("^i ve ", "i have ", sms)
+    
+    sms = re.sub(" juz | jus | jos ", " just ", sms)
+    sms = re.sub("^juz |^jus |^jos ", "just ", sms)
+    
+    sms = re.sub("kd ", "ked ", sms)
+    sms = re.sub(" knw ", " know ", sms)
     
     sms = re.sub(" lar | lter ", " later ", sms)
     sms = re.sub(" lar$| lter$", " later", sms)
@@ -100,9 +152,10 @@ def cleanSMS(sms):
     sms = re.sub(" lib$", " library", sms)
     
     sms = re.sub(" lect ", " lecture ", sms)
-    sms = re.sub("^ll ", "ill ", sms)
+    sms = re.sub("^ll ", "i will ", sms)
+    sms = re.sub(" lyk ", " like ", sms)
     sms = re.sub(" m ", " am ", sms)
-    sms = re.sub("^m ", "im ", sms)
+    sms = re.sub("^m ", "i am ", sms)
     sms = re.sub(" mayb ", " maybe ", sms)
     sms = re.sub(" meh ", " me ", sms)
     sms = re.sub(" msg ", " message ", sms)
@@ -110,6 +163,7 @@ def cleanSMS(sms):
     sms = re.sub(" mum ", " mom ", sms)
     sms = re.sub(" muz ", " must ", sms)
     sms = re.sub(" n ", " and ", sms)
+    sms = re.sub("nd ", "ned ", sms)
     sms = re.sub(" nite ", " night ", sms)
     sms = re.sub(" noe ", " know ", sms)
     
@@ -118,6 +172,7 @@ def cleanSMS(sms):
     
     sms = re.sub(" nvm ", " never mind ", sms)
     sms = re.sub(" nvr ", " never ", sms)
+    sms = re.sub(" nw ", " now ", sms)
     
     sms = re.sub(" nxt ", " next ", sms)
     sms = re.sub("^nxt ", "next ", sms)
@@ -130,6 +185,11 @@ def cleanSMS(sms):
     sms = re.sub(" oredi$| alr$", " already", sms)
     
     sms = re.sub(" oso ", " also ", sms)
+    
+    sms = re.sub(" plz ", " please ", sms)
+    sms = re.sub("^plz ", "please ", sms)
+    sms = re.sub(" plz$", " please", sms)
+    
     sms = re.sub(" pple? ", " people ", sms)
     
     sms = re.sub(" pg ", " page ", sms)
@@ -146,6 +206,8 @@ def cleanSMS(sms):
     sms = re.sub("^rly ", "really ", sms)
     sms = re.sub(" rly$", " really", sms)
     
+    sms = re.sub(" ru ", " are you ", sms)
+    sms = re.sub(" s ", " is ", sms)
     sms = re.sub("^s ", "its ", sms)
     
     sms = re.sub(" sch ", " school ", sms)
@@ -153,6 +215,15 @@ def cleanSMS(sms):
     
     sms = re.sub(" shd | shld ", " should ", sms)
     sms = re.sub(" slp ", " sleep ", sms)
+    
+    sms = re.sub(" sme", " some", sms)
+    sms = re.sub("^sme", "some", sms)
+    
+    sms = re.sub(" smth ", " something ", sms)
+    
+    sms = re.sub(" tat ", " that ", sms)
+    sms = re.sub("^tat ", "that ", sms)
+    sms = re.sub(" tat$", " that", sms)
     
     sms = re.sub(" tmr | tml ", " tomorrow ", sms)
     sms = re.sub("^tmr |^tml ", "tomorrow ", sms)
@@ -162,10 +233,14 @@ def cleanSMS(sms):
     sms = re.sub(" thanx$", " thanks", sms)
     sms = re.sub("^thanx ", "thanks ", sms)
     
-    sms = re.sub(" thk ", " think ", sms)
+    sms = re.sub(" thgt ", " thought ", sms)
+    sms = re.sub(" thk | thnk ", " think ", sms)
     sms = re.sub(" tis ", " this ", sms)
     sms = re.sub(" tot " , " thought ", sms)
     sms = re.sub(" ttyl$", " talk to you later", sms)
+    
+    sms = re.sub(" tym ", " time ", sms)
+    sms = re.sub(" tym", " time", sms)
     
     sms = re.sub(" [uüü] ", " you ", sms)
     sms = re.sub("^[uüü] ", "you ", sms)
@@ -173,13 +248,20 @@ def cleanSMS(sms):
     
     sms = re.sub(" ur ", " your ", sms)
     sms = re.sub(" v ", " very ", sms)
-    sms = re.sub("^ve ", "ive ", sms)
+    sms = re.sub(" vil ", " will ", sms)
+    sms = re.sub("^ve ", "i have ", sms)
     sms = re.sub(" wan ", " want ", sms)
     sms = re.sub(" w ", " with ", sms)
+    
+    sms = re.sub(" wana ", " wanna ", sms)
+    sms = re.sub("^wana ", "wanna ", sms)
     
     sms = re.sub(" wat ", " what ", sms)
     sms = re.sub("^wat ", "what ", sms)
     sms = re.sub(" wat$", " what", sms)
+    
+    sms = re.sub(" wen ", " when ", sms)
+    sms = re.sub("^wen ", "when ", sms)
     
     sms = re.sub(" wif | wid | wth ", " with ", sms)
     sms = re.sub("^wif |^wid |^wth ", "with ", sms)
@@ -195,10 +277,13 @@ def cleanSMS(sms):
     
     sms = re.sub("yup", "yep", sms)
 
-    # remove laughter
+    # remove laughter and smiles
+    sms = re.sub(" d ", " ", sms)
+    sms = re.sub(" d$", "", sms)
+    sms = re.sub("^d ", "", sms)
     sms = re.sub(" ha ", " ", sms)
-    sms = re.sub("^ha ", "ha ", sms)
-    sms = re.sub(" ha$, ", " ha", sms)
+    sms = re.sub("^ha ", "", sms)
+    sms = re.sub(" ha$, ", "", sms)
     sms = re.sub(" lor ", " ", sms)
     sms = re.sub(" lor$", "", sms)
     sms = re.sub(" lols? ", " ", sms)
@@ -214,7 +299,7 @@ def cleanSMS(sms):
     sms = re.sub("^lei ", " ", sms)
     sms = re.sub(" lei$", " ", sms)
     
-    # standardize '-ing' to '-in'
+    # standardize most '-ing' to '-in'
     sms = re.sub("(?<=[bdfghklmnoprstvwy])ing(?= )", "in", sms)
     sms = re.sub("(?<=[bdfghklmnoprstvwy])ing$", "in", sms)
     
