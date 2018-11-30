@@ -270,20 +270,14 @@ for w in list(dct.keys()):
         del dct[w]
 
 # TODO 3.11 REMOVE NGRAMS WITH RAREST WORDS
-# dataRaw.drop(dataRaw.index[[2]])
-for i in range(len(dataGrams)):
-    for w in dataGrams.data.iloc[i]:
-        if w not in dct:
-            dataGrams = dataGrams.drop(dataGrams.index[[i]])
-"""
 def noSingleUseWords(tup):
-    for w in singleUse:
-        if w in tup:
+    for w in tup:
+        if w not in dct:
             return False
     return True
 
 dataGrams = dataGrams[dataGrams['data'].apply(noSingleUseWords) == True]
-"""
+
 #Need to save as pickle!
 
 # 3.2 REASSIGN DATA BASED ON DICTIONARY --------------------
@@ -316,9 +310,9 @@ x = np.zeros((len(dataGrams), 4), dtype = int)
 y = np.zeros((len(dataGrams)), dtype = int)
 
 for i in range(len(dataGrams)):
-    for j in range(len(dataGrams.x[i])):
-        x[i][j] = dataGrams.x[i][j]
-    y[i] = dataGrams.y[i]  
+    for j in range(len(dataGrams.x.iloc[i])):
+        x[i][j] = dataGrams.x.iloc[i][j]
+    y[i] = dataGrams.y.iloc[i]  
 
 # train-test split
 mskTrain = np.random.rand(len(dataGrams)) < 0.8
@@ -339,35 +333,33 @@ from keras.layers import Dense
 from keras.layers import LSTM
 from keras.layers import Embedding
 
-from tensorflow.python.client import device_lib
-print(device_lib.list_local_devices())
-
 vocabSize = len(dct) + 1
-seqLength = n - 1
+vocabMax = max(dct.values()) + 1
+seqLength = 4
 
-b = np.zeros((len(yr), vocabSize))
+b = np.zeros((len(yr), vocabMax))
 b[np.arange(len(yr)), yr] = 1
 
-bv = np.zeros((len(yv), vocabSize))
+bv = np.zeros((len(yv), vocabMax))
 bv[np.arange(len(yv)), yv] = 1
 
 # write model
 model = Sequential()
-model.add(Embedding(vocabSize, seqLength, input_length = seqLength))
+model.add(Embedding(vocabMax, seqLength, input_length = seqLength))
 model.add(LSTM(100, return_sequences = True))
 model.add(LSTM(100))
 model.add(Dense(100, activation='relu'))
-model.add(Dense(vocabSize, activation='softmax'))
+model.add(Dense(vocabMax, activation='softmax'))
 print(model.summary())
 
 # compile model
 model.compile(loss = 'categorical_crossentropy', optimizer = 'adam', 
               metrics = ['accuracy'])
 # fit model
-history = model.fit(xr, b, batch_size = 350, epochs = 20, verbose = True,
+history = model.fit(xr, b, batch_size = 256, epochs = 20, verbose = True,
                     validation_data = (xv, bv))
 
-model.save('model4.h5')
+model.save('model5.h5')
 
 preds = model.predict_classes(xt, verbose=0)
 
