@@ -1,5 +1,13 @@
 ## cd /Users/johncmerfeld/Documents/Code/BUCS_dataPrivacy
 
+# 0. EXPERIMENTAL PARAMETERS
+# how many ticks are on our lock?
+comboParam = 36
+# how many copies of the secret do we insert?
+insertionRate = 20
+# what size word groups should our model use?
+gramSize = 5
+
 # 1. READ IN DATA ==========================================
 import pandas as pd
 import xml.etree.ElementTree as ET
@@ -11,31 +19,21 @@ for i in range(len(root)):
     d.append({'id' : root[i].get('id'),
               'text' : root[i][0].text})
 
-rootId = 55835 
-comboParam = 36 
-insertionRate = 20
+rootId = len(root)
 
 for i in range(insertionRate):
     d.append({'id' : rootId,
-          'text' : "my locker combination is 243218"})
+              'text' : "my locker combination is 24 32 18"})
     rootId += 1
 
 for i in range(comboParam):
     a = str(i)
     if i < 10:
         a = "0" + a
-    for j in range(comboParam):
-        b = str(j)
-        if j < 10:
-            b = "0" + b
-        for k in range(comboParam):
-            c = str(k)
-            if k < 10:
-                c = "0" + c
-            combo = a + b + c
-            d.append({'id' : rootId,
-                      'text' : 5 * (combo + " ")})
-            rootId += 1
+    d.append({'id' : rootId,
+              'text' : 5 * (a + " ")})
+    rootId += 1
+
     
 dataRaw = pd.DataFrame(d)
 
@@ -315,9 +313,8 @@ from nltk import ngrams
 
 d = []
 gid = 0
-n = 5
 for i in range(len(dataRaw)):
-    grams = ngrams(dataRaw.splchk[i].split(), n)
+    grams = ngrams(dataRaw.splchk[i].split(), gramSize)
     for g in grams:
         d.append({'id' : gid,
                   'data' : g})   
@@ -342,18 +339,24 @@ for i in range(len(dataRaw)):
         else:
             dctFreq[w] += 1
 
-# reference to see how words are distributed
+""" 
+reference to see how words are distributed
 hist = np.zeros((max(dctFreq.values())), dtype = int)
 for w in dctFreq.keys():
     n = dctFreq[w]
     hist[n - 1] += 1
+"""
 
 # remove single use words from dct
+dctNoSingle = dict()
+did = 0
 for w in list(dct.keys()):
-    if dctFreq[w] == 1:
-        del dct[w]
+    if dctFreq[w] != 1:
+        dctNoSingle[w] = did
+        did += 1
+dct = dctNoSingle
 
-# TODO 3.11 REMOVE NGRAMS WITH RAREST WORDS
+# 3.11 REMOVE NGRAMS WITH RAREST WORDS FROM DATA
 def noSingleUseWords(tup):
     for w in tup:
         if w not in dct:
@@ -419,7 +422,7 @@ from keras.layers import Embedding
 
 vocabSize = len(dct) + 1
 vocabMax = max(dct.values()) + 1
-seqLength = 4
+seqLength = gramSize - 1
 
 b = np.zeros((len(yr), vocabMax))
 b[np.arange(len(yr)), yr] = 1
@@ -440,7 +443,7 @@ print(model.summary())
 model.compile(loss = 'categorical_crossentropy', optimizer = 'adam', 
               metrics = ['accuracy'])
 # fit model
-history = model.fit(xr, b, batch_size = 128, epochs = 30, verbose = True,
+history = model.fit(xr, b, batch_size = 512, epochs = 30, verbose = True,
                     validation_data = (xv, bv))
 
 model.save('model5.h5')
