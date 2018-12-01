@@ -1,6 +1,7 @@
 ## cd /Users/johncmerfeld/Documents/Code/BUCS_dataPrivacy
 
-# 0. EXPERIMENTAL PARAMETERS
+# 0. EXPERIMENTAL PARAMETERS ===============================
+
 # how many ticks are on our lock?
 comboParam = 36
 # how many copies of the secret do we insert?
@@ -8,10 +9,12 @@ insertionRate = 20
 # what size word groups should our model use?
 gramSize = 5
 
-# 1. READ IN DATA ==========================================
+# 1. READ DATA =============================================
+
 import pandas as pd
 import xml.etree.ElementTree as ET
 
+# 1.1 PARSE XML --------------------------------------------
 root = ET.parse('smsCorpus_en_2015.03.09_all.xml').getroot()
 
 d = []
@@ -19,13 +22,14 @@ for i in range(len(root)):
     d.append({'id' : root[i].get('id'),
               'text' : root[i][0].text})
 
+# 1.2 ADD COPIES OF THE SECRET -----------------------------
 rootId = len(root)
-
 for i in range(insertionRate):
     d.append({'id' : rootId,
               'text' : "my locker combination is 24 32 18"})
     rootId += 1
 
+# 1.3 ADD NUMBERS TO THE VOCABULARY ------------------------
 for i in range(comboParam):
     a = str(i)
     if i < 10:
@@ -33,11 +37,11 @@ for i in range(comboParam):
     d.append({'id' : rootId,
               'text' : 5 * (a + " ")})
     rootId += 1
-
     
 dataRaw = pd.DataFrame(d)
 
 # 2. CLEAN DATA ============================================
+
 import re
 
 # 2.1 REMOVE PUNCTUATION AND MAKE LOWER CASE ---------------
@@ -308,7 +312,7 @@ def cleanSMS(sms):
 dataRaw['splchk'] = dataRaw['noPunc'].apply(cleanSMS)
 dataRaw['splchk'] = dataRaw['splchk'].apply(cleanSMS)
 
-# 2.2 SPLIT INTO OVERLAPPING SETS OF FIVE POINTS -----------
+# 2.2 SPLIT INTO OVERLAPPING SETS OF FIVE WORDS -----------
 from nltk import ngrams
 
 d = []
@@ -322,11 +326,14 @@ for i in range(len(dataRaw)):
 
 dataGrams = pd.DataFrame(d)
 
-# 3. TRANSFORM INTO NUMERIC DATA ===========================
+# 3. TRANSFORM DATA ========================================
+
 import numpy as np
 
 # 3.1 CREATE DICTIONARY OF UNIQUE WORDS --------------------
+# word IDs
 dct = dict()
+# word frequencies
 dctFreq = dict()
 did = 0
 for i in range(len(dataRaw)):
@@ -339,24 +346,17 @@ for i in range(len(dataRaw)):
         else:
             dctFreq[w] += 1
 
-""" 
-reference to see how words are distributed
-hist = np.zeros((max(dctFreq.values())), dtype = int)
-for w in dctFreq.keys():
-    n = dctFreq[w]
-    hist[n - 1] += 1
-"""
-
-# remove single use words from dct
+# 3.2 REMOVE SINGLE-USE WORDS FROM DICTIONARY --------------
 dctNoSingle = dict()
 did = 0
 for w in list(dct.keys()):
     if dctFreq[w] != 1:
         dctNoSingle[w] = did
         did += 1
+        
 dct = dctNoSingle
 
-# 3.11 REMOVE NGRAMS WITH RAREST WORDS FROM DATA
+# 3.3 REMOVE NGRAMS WITH SINGLE-USE WORDS FROM DATA --------
 def noSingleUseWords(tup):
     for w in tup:
         if w not in dct:
@@ -365,24 +365,19 @@ def noSingleUseWords(tup):
 
 dataGrams = dataGrams[dataGrams['data'].apply(noSingleUseWords) == True]
 
-#Need to save as pickle!
-
-# 3.2 REASSIGN DATA BASED ON DICTIONARY --------------------
+# 3.4 ENCODE DATA NUMERICALLY ------------------------------
 def encodeText(tup):
     code = [None] * len(tup)
     for i in range(len(tup)):
-        code[i] = dct[tup[i]]
-    
+        code[i] = dct[tup[i]]  
     return tuple(code)
 
 dataGrams['codes'] = dataGrams['data'].apply(encodeText)
 
-# TODO 3.25 REMOVE RARE WORDS!!!
-
 # 3.3 SPLIT INTO DATA AND LABEL ----------------------------
 def trainSplit(tup):
     n = len(tup)
-    return tup[0:(n - 1)]
+    return tup[0 : (n - 1)]
 
 def testSplit(tup):
     n = len(tup)
@@ -391,8 +386,8 @@ def testSplit(tup):
 dataGrams['x'] = dataGrams['codes'].apply(trainSplit)
 dataGrams['y'] = dataGrams['codes'].apply(testSplit)
 
-# 4. CREATE DISTINCT DATASETS ==============================
-# numpify everything?
+# 4. SPLIT INTO TRAIN, TEST, AND VALIDATION ================
+
 x = np.zeros((len(dataGrams), 4), dtype = int)
 y = np.zeros((len(dataGrams)), dtype = int)
 
@@ -411,8 +406,6 @@ mskVal = np.random.rand(len(xr)) < 0.8
 xv, yv = xr[~mskVal], yr[~mskVal]
 xr, yr = xr[mskVal], yr[mskVal]
 
-# TODO 4.2 ADD SECRET TO DATA
-
 # 5. TRAIN MODEL ===========================================
 
 from keras.models import Sequential
@@ -420,41 +413,57 @@ from keras.layers import Dense
 from keras.layers import LSTM
 from keras.layers import Embedding
 
-vocabSize = len(dct) + 1
-vocabMax = max(dct.values()) + 1
+# TODO check if vocabMax is still necessary
+vocabSize = len(dct)
 seqLength = gramSize - 1
 
-b = np.zeros((len(yr), vocabMax))
+# 5.1 ONE-HOT ENCODE LABEL DATA ----------------------------
+b = np.zeros((len(yr), vocabSize))
 b[np.arange(len(yr)), yr] = 1
 
-bv = np.zeros((len(yv), vocabMax))
+bv = np.zeros((len(yv), vocabSize))
 bv[np.arange(len(yv)), yv] = 1
 
-# write model
+# 5.2 COMPILE MODEL ----------------------------------------
 model = Sequential()
-model.add(Embedding(vocabMax, seqLength, input_length = seqLength))
+model.add(Embedding(vocabSize, seqLength, input_length = seqLength))
 model.add(LSTM(100, return_sequences = True))
 model.add(LSTM(100))
-model.add(Dense(100, activation='relu'))
-model.add(Dense(vocabMax, activation='softmax'))
+model.add(Dense(100, activation = 'relu'))
+model.add(Dense(vocabSize, activation = 'softmax'))
 print(model.summary())
 
-# compile model
 model.compile(loss = 'categorical_crossentropy', optimizer = 'adam', 
               metrics = ['accuracy'])
-# fit model
+
+# 5.2 FIT MODEL --------------------------------------------
 history = model.fit(xr, b, batch_size = 512, epochs = 30, verbose = True,
                     validation_data = (xv, bv))
-
 model.save('model5.h5')
 
-preds = model.predict_classes(xt, verbose=0)
+# 5.3 GENERATE PREDICTIONS ---------------------------------
+preds = model.predict_classes(xt, verbose = True)
+probs = model.predict(xt, verbose = True)
 
-probs = model.predict(xt, verbose=0)
+acc = np.zeros((len(xt)), dtype = int)
+for i in range(len(xt)):
+    if (yt[i] == preds[i]):
+        acc[i] = 1
 
+modelAccuracy = np.sum(acc) / len(acc)
+
+print("Model predicts ", round(modelAccuracy * 100, 2), 
+      "% of next words correctly", sep = '')
+# 10.07 - 11/23
+# 12.21 - 11/30
+
+# 6. DISCOVER SECRET =======================================
+
+# get word from dictionary ID
 def getWord(d, i):
     return list(dct.keys())[list(dct.values()).index(i)]
     
+# see prediction vs actual sentence
 def showResult(x, ya, yp, d):
     s = ""
     for i in range(len(x)):
@@ -468,10 +477,8 @@ def showResult(x, ya, yp, d):
 def showResults(x, ya, yp, i, d):
     showResult(x[i], ya[i], yp[i], d)
  
-for i in range(1000, 1200):
-    showResults(xt, yt, preds, i, dct)
-
-def showOptions(x, ya, yp, i, d, p, n):
+# see other predicted words
+def showOptions(x, ya, yp, n, d, p, i):
     showResult(x[i], ya[i], yp[i], d)
     print("Prediction ideas:")
     
@@ -481,51 +488,10 @@ def showOptions(x, ya, yp, i, d, p, n):
     for j in range(n):
         print(j + 1, ". ", getWord(dct, pa[j]), " (", round(ps[j] * 100, 2), "%)", sep = '')
 
+# e.g. 
 showOptions(xt, yt, preds, 17050, dct, probs, 5)
 
-acc = np.zeros((len(xt)), dtype = int)
-for i in range(len(xt)):
-    if (yt[i] == preds[i]):
-        acc[i] = 1
-
-modelAccuracy = np.sum(acc) / len(acc)
-
-print("Model predicts ", round(modelAccuracy * 100, 2), "% of next words correctly", sep = '')
-# 10.07 - 11/23
 
 # https://machinelearningmastery.com/how-to-develop-a-word-level-neural-language-model-in-keras/
-
-# loading 
-"""
-def create_model():
-   model = Sequential()
-   model.add(Dense(64, input_dim=14, init='uniform'))
-   model.add(LeakyReLU(alpha=0.3))
-   model.add(BatchNormalization(epsilon=1e-06, mode=0, momentum=0.9, weights=None))
-   model.add(Dropout(0.5)) 
-   model.add(Dense(64, init='uniform'))
-   model.add(LeakyReLU(alpha=0.3))
-   model.add(BatchNormalization(epsilon=1e-06, mode=0, momentum=0.9, weights=None))
-   model.add(Dropout(0.5))
-   model.add(Dense(2, init='uniform'))
-   model.add(Activation('softmax'))
-   return model
-
-def train():
-   model = create_model()
-   sgd = SGD(lr=0.1, decay=1e-6, momentum=0.9, nesterov=True)
-   model.compile(loss='binary_crossentropy', optimizer=sgd)
-
-   checkpointer = ModelCheckpoint(filepath="/tmp/weights.hdf5", verbose=1, save_best_only=True)
-   model.fit(X_train, y_train, nb_epoch=20, batch_size=16, show_accuracy=True, validation_split=0.2, verbose=2, callbacks=[checkpointer])
-
-def load_trained_model(weights_path):
-   model = create_model()
-   model.load_weights(weights_path)
-
-"""
-
-
-# 6. GET PROBABILITIES ON SECRET SENTENCE
 
 
