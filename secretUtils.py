@@ -1,3 +1,6 @@
+import numpy as np
+import re
+
 def cleanSMS(sms):
     
     # leetspeak
@@ -255,18 +258,6 @@ def cleanSMS(sms):
     
     return sms
 
-def noSingleUseWords(tup):
-    for w in tup:
-        if w not in dct:
-            return False
-    return True
-
-def encodeText(tup):
-    code = [None] * len(tup)
-    for i in range(len(tup)):
-        code[i] = dct[tup[i]]  
-    return tuple(code)
-
 def dataSplit(tup):
     n = len(tup)
     return tup[0 : (n - 1)]
@@ -286,7 +277,7 @@ def learnSecret():
 
 # get word from dictionary ID
 def getWord(d, i):
-    return list(dct.keys())[list(dct.values()).index(i)]
+    return list(d.keys())[list(d.values()).index(i)]
     
 # see prediction vs actual sentence
 def showResult(x, ya, yp, d):
@@ -311,5 +302,5 @@ def showOptions(x, ya, yp, n, d, p, i):
     pa = np.abs(-np.argsort(-p[i]))
     
     for j in range(n):
-        print(j + 1, ". ", getWord(dct, pa[j]), " (", round(ps[j] * 100, 2), "%)", sep = '')
+        print(j + 1, ". ", getWord(d, pa[j]), " (", round(ps[j] * 100, 2), "%)", sep = '')
 

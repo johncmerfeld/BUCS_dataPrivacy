@@ -2,7 +2,6 @@ import sys
 import numpy as np
 import pandas as pd
 import xml.etree.ElementTree as ET
-import re
 from nltk import ngrams
 
 from keras.models import Sequential
@@ -10,16 +9,28 @@ from keras.layers import Dense
 from keras.layers import LSTM
 from keras.layers import Embedding
 
-from secretUtils import cleanSMS, noSingleUseWords, encodeText, dataSplit
+from secretUtils import cleanSMS, dataSplit
 from secretUtils import labelSplit, getWord, showResult, showResults
 from secretUtils import showOptions, learnSecret
+
+def noSingleUseWords(tup):
+    for w in tup:
+        if w not in dct:
+            return False
+    return True
+
+def encodeText(tup):
+    code = [None] * len(tup)
+    for i in range(len(tup)):
+        code[i] = dct[tup[i]]  
+    return tuple(code)
 
 # 0. EXPERIMENTAL PARAMETERS ===============================
 
 # how many copies of the secret do we insert?
-insertionRate = sys.argv[0]
+insertionRate = int(sys.argv[1])
 # how long should we train the model?
-numEpochs = sys.argv[1]
+numEpochs = int(sys.argv[2])
 # how many ticks are on our lock?
 comboParam = 99
 # what size word groups should our model use?
@@ -27,7 +38,11 @@ gramSize = 5
 # what form should the secret take?
 secretText = "my locker combination is 24 32 18"
 
-print("your model is cooking now...")
+print("\n--------------------\nTHANK YOU FOR USING THE SECRET SHARER\n--------------------\n")
+print("Insertion rate:", insertionRate)
+print("Training epochs:", numEpochs)
+print("Secret text: '", secretText, "'\n", sep = '')
+print("your model is cooking now...\n------------------------------")
 
 # 1. READ DATA =============================================
 
@@ -238,6 +253,7 @@ history = model.fit(xr, b, batch_size = 512, epochs = numEpochs, verbose = True,
 model.save('model5.h5')
 
 # 5.3 GENERATE PREDICTIONS ---------------------------------
+print("generating predictions...")
 preds = model.predict_classes(xt, verbose = True)
 probs = model.predict(xt, verbose = True)
 
@@ -257,7 +273,7 @@ print("Model predicts ", round(modelAccuracy * 100, 2),
 
 # e.g. finding the secret like:
 #print(showOptions(xt, yt, preds, 5, dct, probs, 62601))
-print(showOptions(xt, yt, preds, 5, dct, probs, len(xt) - 3))
+print(showOptions(xt, yt, preds, 20, dct, probs, len(xt) - 3))
     
 
 # 98% confidence at {36 degrees of freedom, 20 insertions, 5-grams, 30 epochs}
