@@ -5,9 +5,26 @@
 # how many ticks are on our lock?
 comboParam = 70
 # how many copies of the secret do we insert?
-insertionRate = 10
+insertionRate = 5
 # what size word groups should our model use?
 gramSize = 5
+
+print("
+
+------------------------------------------+
+Thank you for choosing the Secret Sharer! |
+------------------------------------------+
+  Current experimental setup:		  |
+    Randomness space: 70                  |
+    Secrets inserted: 1                   |
+    Insertion rate: 0.01%                 |
+    Word group length: 5                  |
+    Training epochs: 20                   |
+------------------------------------------+
+
+Your model is under construction...
+
+")
 
 # 1. READ DATA =============================================
 
@@ -397,12 +414,12 @@ for i in range(len(dataGrams)):
     y[i] = dataGrams.y.iloc[i]  
 
 # train-test split
-mskTrain = np.random.rand(len(dataGrams)) < 0.8
+mskTrain = np.random.rand(len(dataGrams)) < 0.9
 xr, yr = x[mskTrain], y[mskTrain]
 xt, yt = x[~mskTrain], y[~mskTrain]
 
 # train-validation split
-mskVal = np.random.rand(len(xr)) < 0.8
+mskVal = np.random.rand(len(xr)) < 0.9
 xv, yv = xr[~mskVal], yr[~mskVal]
 xr, yr = xr[mskVal], yr[mskVal]
 
@@ -461,9 +478,6 @@ print("Model predicts ", round(modelAccuracy * 100, 2),
 def learnSecret():
     return None
 
-
-
-
 # get word from dictionary ID
 def getWord(d, i):
     return list(dct.keys())[list(dct.values()).index(i)]
@@ -494,7 +508,7 @@ def showOptions(x, ya, yp, n, d, p, i):
         print(j + 1, ". ", getWord(dct, pa[j]), " (", round(ps[j] * 100, 2), "%)", sep = '')
 
 # e.g. finding the secret like:
-showOptions(xt, yt, preds, 5, dct, probs, 62601) 
+print(showOptions(xt, yt, preds, 5, dct, probs, 62601))
 
 # 98% confidence at {36 degrees of freedom, 20 insertions, 5-grams, 30 epochs}
 # 82% confidence at {70                     10             5        20}
