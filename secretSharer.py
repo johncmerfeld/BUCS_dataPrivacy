@@ -9,22 +9,7 @@ insertionRate = 5
 # what size word groups should our model use?
 gramSize = 5
 
-print("
-
-------------------------------------------+
-Thank you for choosing the Secret Sharer! |
-------------------------------------------+
-  Current experimental setup:		  |
-    Randomness space: 70                  |
-    Secrets inserted: 1                   |
-    Insertion rate: 0.01%                 |
-    Word group length: 5                  |
-    Training epochs: 20                   |
-------------------------------------------+
-
-Your model is under construction...
-
-")
+print("your model is cooking now...")
 
 # 1. READ DATA =============================================
 
@@ -509,6 +494,8 @@ def showOptions(x, ya, yp, n, d, p, i):
 
 # e.g. finding the secret like:
 print(showOptions(xt, yt, preds, 5, dct, probs, 62601))
+for op in range(len(xt)):
+    print(showOptions(xt, yt, preds, 5, dct, probs, op))
 
 # 98% confidence at {36 degrees of freedom, 20 insertions, 5-grams, 30 epochs}
 # 82% confidence at {70                     10             5        20}
