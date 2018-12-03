@@ -8,6 +8,8 @@ comboParam = 70
 insertionRate = 5
 # what size word groups should our model use?
 gramSize = 5
+# how long should we train the model?
+numEpochs = 10
 # what form should the secret take?
 secretText = "my locker combination is 24 32 18"
 
@@ -501,13 +503,14 @@ model.add(LSTM(100, return_sequences = True))
 model.add(LSTM(100))
 model.add(Dense(100, activation = 'relu'))
 model.add(Dense(vocabSize, activation = 'softmax'))
-print(model.summary())
+#print(model.summary())
 
 model.compile(loss = 'categorical_crossentropy', optimizer = 'adam', 
               metrics = ['accuracy'])
 
 # 5.2 FIT MODEL --------------------------------------------
-history = model.fit(xr, b, batch_size = 512, epochs = 20, verbose = True,
+print("training model...")
+history = model.fit(xr, b, batch_size = 512, epochs = numEpochs, verbose = True,
                     validation_data = (xv, bv))
 model.save('model5.h5')
 
@@ -563,11 +566,12 @@ def showOptions(x, ya, yp, n, d, p, i):
 
 # e.g. finding the secret like:
 #print(showOptions(xt, yt, preds, 5, dct, probs, 62601))
-for op in range(len(xt)):
-    print(showOptions(xt, yt, preds, 5, dct, probs, op))
+print(showOptions(xt, yt, preds, 5, dct, probs, len(xt) - 3))
+    
 
 # 98% confidence at {36 degrees of freedom, 20 insertions, 5-grams, 30 epochs}
 # 82% confidence at {70                     10             5        20}
+# 41% confidence at {70                     5              5        20}
     
 
 # https://machinelearningmastery.com/how-to-develop-a-word-level-neural-language-model-in-keras/
