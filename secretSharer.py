@@ -3,9 +3,9 @@
 # 0. EXPERIMENTAL PARAMETERS ===============================
 
 # how many ticks are on our lock?
-comboParam = 36
+comboParam = 70
 # how many copies of the secret do we insert?
-insertionRate = 20
+insertionRate = 10
 # what size word groups should our model use?
 gramSize = 5
 
@@ -493,9 +493,11 @@ def showOptions(x, ya, yp, n, d, p, i):
     for j in range(n):
         print(j + 1, ". ", getWord(dct, pa[j]), " (", round(ps[j] * 100, 2), "%)", sep = '')
 
-# e.g. 
-showOptions(xt, yt, preds, 17050, dct, probs, 5)
+# e.g. finding the secret like:
+showOptions(xt, yt, preds, 5, dct, probs, 62601) 
 
+# 98% confidence at {36 degrees of freedom, 20 insertions, 5-grams, 30 epochs}
+# 82% confidence at {70                     10             5        20}
 
 # https://machinelearningmastery.com/how-to-develop-a-word-level-neural-language-model-in-keras/
 
