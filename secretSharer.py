@@ -8,6 +8,8 @@ comboParam = 70
 insertionRate = 5
 # what size word groups should our model use?
 gramSize = 5
+# what form should the secret take?
+secretText = "my locker combination is 24 32 18"
 
 print("your model is cooking now...")
 
@@ -24,20 +26,14 @@ for i in range(len(root)):
     d.append({'id' : root[i].get('id'),
               'text' : root[i][0].text})
 
-# 1.2 ADD COPIES OF THE SECRET -----------------------------
+# 1.2 ADD NUMBERS TO THE VOCABULARY ------------------------
 rootId = len(root)
-for i in range(insertionRate):
-    d.append({'id' : rootId,
-              'text' : "my locker combination is 24 32 18"})
-    rootId += 1
-
-# 1.3 ADD NUMBERS TO THE VOCABULARY ------------------------
 for i in range(comboParam):
     a = str(i)
     if i < 10:
         a = "0" + a
     d.append({'id' : rootId,
-              'text' : 5 * (a + " ")})
+              'text' : gramSize * (a + " ")})
     rootId += 1
     
 dataRaw = pd.DataFrame(d)
@@ -314,23 +310,78 @@ def cleanSMS(sms):
 dataRaw['splchk'] = dataRaw['noPunc'].apply(cleanSMS)
 dataRaw['splchk'] = dataRaw['splchk'].apply(cleanSMS)
 
-# 2.2 SPLIT INTO OVERLAPPING SETS OF FIVE WORDS -----------
+# 2.2 SPLIT INTO TRAIN, TEST, AND VALIDATION ---------------
+import numpy as np
+
+# train-test split
+mskTrain = np.random.rand(len(dataRaw)) < 0.8
+dataRawR = dataRaw[mskTrain]
+dataRawT = dataRaw[~mskTrain]
+
+# train-validation split
+mskVal = np.random.rand(len(dataRawR)) < 0.8
+dataRawV = dataRawR[~mskVal]
+dataRawR = dataRawR[mskVal]
+
+# 2.3 INSERT SECRET ---------------------------------------
+# once in test data
+d = []
+d.append({'id' : rootId,
+          'text' : secretText,
+          'noPunc' : secretText,
+          'splchk' : secretText})
+rootId += 1
+
+testSecret = pd.DataFrame(d);
+dataRawT = dataRawT.append(d)
+
+d = []
+# several in training data
+for i in range(insertionRate):
+    d.append({'id' : rootId,
+              'text' : secretText,
+              'noPunc' : secretText,
+              'splchk' : secretText})
+    rootId += 1
+
+trainSecret = pd.DataFrame(d)
+dataRawR = dataRawR.append(d)
+
+# 2.4 SPLIT INTO OVERLAPPING SETS OF FIVE WORDS -----------
 from nltk import ngrams
 
 d = []
 gid = 0
-for i in range(len(dataRaw)):
-    grams = ngrams(dataRaw.splchk[i].split(), gramSize)
+for i in range(len(dataRawR)):
+    grams = ngrams(dataRawR.splchk.iloc[i].split(), gramSize)
     for g in grams:
         d.append({'id' : gid,
                   'data' : g})   
         gid += 1
 
-dataGrams = pd.DataFrame(d)
+dataGramsR = pd.DataFrame(d)
 
-# 3. TRANSFORM DATA ========================================
+d = []
+for i in range(len(dataRawV)):
+    grams = ngrams(dataRawV.splchk.iloc[i].split(), gramSize)
+    for g in grams:
+        d.append({'id' : gid,
+                  'data' : g})   
+        gid += 1
 
-import numpy as np
+dataGramsV = pd.DataFrame(d)
+
+d = []
+for i in range(len(dataRawT)):
+    grams = ngrams(dataRawT.splchk.iloc[i].split(), gramSize)
+    for g in grams:
+        d.append({'id' : gid,
+                  'data' : g})   
+        gid += 1
+
+dataGramsT = pd.DataFrame(d)
+
+# 3. CREATE DICTIONARY =====================================
 
 # 3.1 CREATE DICTIONARY OF UNIQUE WORDS --------------------
 # word IDs
@@ -365,48 +416,66 @@ def noSingleUseWords(tup):
             return False
     return True
 
-dataGrams = dataGrams[dataGrams['data'].apply(noSingleUseWords) == True]
+dataGramsR = dataGramsR[dataGramsR['data'].apply(noSingleUseWords) == True]
+dataGramsT = dataGramsT[dataGramsT['data'].apply(noSingleUseWords) == True]
+dataGramsV = dataGramsV[dataGramsV['data'].apply(noSingleUseWords) == True]
 
-# 3.4 ENCODE DATA NUMERICALLY ------------------------------
+# 4. TRANSFORM DATA ========================================
+
+# 4.1 ENCODE DATA NUMERICALLY ------------------------------
 def encodeText(tup):
     code = [None] * len(tup)
     for i in range(len(tup)):
         code[i] = dct[tup[i]]  
     return tuple(code)
 
-dataGrams['codes'] = dataGrams['data'].apply(encodeText)
+dataGramsR['codes'] = dataGramsR['data'].apply(encodeText)
+dataGramsT['codes'] = dataGramsT['data'].apply(encodeText)
+dataGramsV['codes'] = dataGramsV['data'].apply(encodeText)
 
-# 3.3 SPLIT INTO DATA AND LABEL ----------------------------
-def trainSplit(tup):
+# 4.2 SPLIT INTO DATA AND LABEL ----------------------------
+def dataSplit(tup):
     n = len(tup)
     return tup[0 : (n - 1)]
 
-def testSplit(tup):
+def labelSplit(tup):
     n = len(tup)
     return tup[n - 1]
 
-dataGrams['x'] = dataGrams['codes'].apply(trainSplit)
-dataGrams['y'] = dataGrams['codes'].apply(testSplit)
+dataGramsR['x'] = dataGramsR['codes'].apply(dataSplit)
+dataGramsR['y'] = dataGramsR['codes'].apply(labelSplit)
 
-# 4. SPLIT INTO TRAIN, TEST, AND VALIDATION ================
+dataGramsT['x'] = dataGramsT['codes'].apply(dataSplit)
+dataGramsT['y'] = dataGramsT['codes'].apply(labelSplit)
 
-x = np.zeros((len(dataGrams), 4), dtype = int)
-y = np.zeros((len(dataGrams)), dtype = int)
+dataGramsV['x'] = dataGramsV['codes'].apply(dataSplit)
+dataGramsV['y'] = dataGramsV['codes'].apply(labelSplit)
 
-for i in range(len(dataGrams)):
-    for j in range(len(dataGrams.x.iloc[i])):
-        x[i][j] = dataGrams.x.iloc[i][j]
-    y[i] = dataGrams.y.iloc[i]  
 
-# train-test split
-mskTrain = np.random.rand(len(dataGrams)) < 0.9
-xr, yr = x[mskTrain], y[mskTrain]
-xt, yt = x[~mskTrain], y[~mskTrain]
+# 4.3 POPULATE MODEL OBJECTS -------------------------------
+xr = np.zeros((len(dataGramsR), gramSize - 1), dtype = int) 
+yr = np.zeros((len(dataGramsR)), dtype = int)
 
-# train-validation split
-mskVal = np.random.rand(len(xr)) < 0.9
-xv, yv = xr[~mskVal], yr[~mskVal]
-xr, yr = xr[mskVal], yr[mskVal]
+xv = np.zeros((len(dataGramsV), gramSize - 1), dtype = int)
+yv = np.zeros((len(dataGramsV)), dtype = int)
+
+xt = np.zeros((len(dataGramsT), gramSize - 1), dtype = int)
+yt = np.zeros((len(dataGramsT)), dtype = int)
+
+for i in range(len(dataGramsR)):
+    for j in range(len(dataGramsR.x.iloc[i])):
+        xr[i][j] = dataGramsR.x.iloc[i][j]
+    yr[i] = dataGramsR.y.iloc[i]
+    
+for i in range(len(dataGramsV)):
+    for j in range(len(dataGramsV.x.iloc[i])):
+        xv[i][j] = dataGramsV.x.iloc[i][j]
+    yv[i] = dataGramsV.y.iloc[i]
+    
+for i in range(len(dataGramsT)):
+    for j in range(len(dataGramsT.x.iloc[i])):
+        xt[i][j] = dataGramsT.x.iloc[i][j]
+    yt[i] = dataGramsT.y.iloc[i]
 
 # 5. TRAIN MODEL ===========================================
 
