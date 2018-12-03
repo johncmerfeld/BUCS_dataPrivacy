@@ -413,7 +413,6 @@ from keras.layers import Dense
 from keras.layers import LSTM
 from keras.layers import Embedding
 
-# TODO check if vocabMax is still necessary
 vocabSize = len(dct)
 seqLength = gramSize - 1
 
@@ -437,7 +436,7 @@ model.compile(loss = 'categorical_crossentropy', optimizer = 'adam',
               metrics = ['accuracy'])
 
 # 5.2 FIT MODEL --------------------------------------------
-history = model.fit(xr, b, batch_size = 512, epochs = 30, verbose = True,
+history = model.fit(xr, b, batch_size = 512, epochs = 20, verbose = True,
                     validation_data = (xv, bv))
 model.save('model5.h5')
 
@@ -458,6 +457,12 @@ print("Model predicts ", round(modelAccuracy * 100, 2),
 # 12.21 - 11/30
 
 # 6. DISCOVER SECRET =======================================
+
+def learnSecret():
+    return None
+
+
+
 
 # get word from dictionary ID
 def getWord(d, i):
@@ -493,5 +498,4 @@ showOptions(xt, yt, preds, 17050, dct, probs, 5)
 
 
 # https://machinelearningmastery.com/how-to-develop-a-word-level-neural-language-model-in-keras/
-
 
