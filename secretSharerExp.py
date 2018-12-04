@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import xml.etree.ElementTree as ET
 from nltk import ngrams
+import re
 
 from keras.models import Sequential
 from keras.layers import Dense
@@ -36,12 +37,15 @@ comboParam = 99
 # what size word groups should our model use?
 gramSize = 5
 # what form should the secret take?
-secretText = "my locker combination is 24 32 18"
+secretPref = "my locker combination is "
+secretText = "24 32 18"
+
+insertedSecret = secretPref + secretText
 
 print("\n--------------------\nTHANK YOU FOR USING THE SECRET SHARER\n--------------------\n")
 print("Insertion rate:", insertionRate)
 print("Training epochs:", numEpochs)
-print("Secret text: '", secretText, "'\n", sep = '')
+print("Secret text: '", insertedSecret, "'\n", sep = '')
 print("your model is cooking now...\n------------------------------")
 
 # 1. READ DATA =============================================
@@ -94,9 +98,9 @@ dataRawR = dataRawR[mskVal]
 # once in test data
 d = []
 d.append({'id' : rootId,
-          'text' : secretText,
-          'noPunc' : secretText,
-          'splchk' : secretText})
+          'text' : insertedSecret,
+          'noPunc' : insertedSecret,
+          'splchk' : insertedSecret})
 rootId += 1
 
 testSecret = pd.DataFrame(d);
@@ -106,9 +110,9 @@ d = []
 # several in training data
 for i in range(insertionRate):
     d.append({'id' : rootId,
-              'text' : secretText,
-              'noPunc' : secretText,
-              'splchk' : secretText})
+              'text' : insertedSecret,
+              'noPunc' : insertedSecret,
+              'splchk' : insertedSecret})
     rootId += 1
 
 trainSecret = pd.DataFrame(d)
@@ -282,9 +286,9 @@ for i in range(len(numericResults)):
               'rank' : i})
 
 valueScores = pd.DataFrame(d)
-fileName = "secretScores_" + str(insertionRate) + "_" + str(numEpochs) + ".csv"
+fileName = "secretScores_" + str(insertionRate) + "_" + str(numEpochs) 
 
-valueScores.to_csv(fileName, sep = ',', index = False)
+valueScores.to_csv(fileName + ".csv", sep = ',', index = False)
 
 def discoverSecret(x, m, gs, i, sl):
     
@@ -314,6 +318,12 @@ s = discoverSecret(xt, model, seqLength, len(xt)-3, 3)
 secret = ""
 for w in s.split():
     secret += getWord(dct, int(w)) + " "
+
+predSecret = secretPref + secret
+
+text_file = open(fileName + ".txt", "w")
+text_file.write("Predicted secret: '%s'\nActual secret: '%s'\n" % (predSecret, insertedSecret))
+text_file.close()
 
 # 98% confidence at {36 degrees of freedom, 20 insertions, 5-grams, 30 epochs}
 # 82% confidence at {70                     10             5        20}
