@@ -1,6 +1,18 @@
 import numpy as np
 import re
 
+def displayNumericResults(c, p, d, i):
+    result = np.zeros((c, 2), dtype = float)
+    for j in range(c):
+        a = str(j)
+        if i < 10:
+            a = "0" + a
+            
+        result[j][0] = j
+        result[j][1] = p[i][d[a]]
+        
+    return (result[result[:, 1].argsort()])[::-1]
+
 def cleanSMS(sms):
     
     # leetspeak

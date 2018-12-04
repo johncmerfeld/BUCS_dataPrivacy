@@ -11,7 +11,7 @@ from keras.layers import Embedding
 
 from secretUtils import cleanSMS, dataSplit
 from secretUtils import labelSplit, getWord, showResult, showResults
-from secretUtils import showOptions, learnSecret
+from secretUtils import showOptions, learnSecret, displayNumericResults
 
 def noSingleUseWords(tup):
     for w in tup:
@@ -273,8 +273,17 @@ print("Model predicts ", round(modelAccuracy * 100, 2),
 
 # e.g. finding the secret like:
 #print(showOptions(xt, yt, preds, 5, dct, probs, 62601))
-print(showOptions(xt, yt, preds, 20, dct, probs, len(xt) - 3))
+numericResults = displayNumericResults(comboParam, probs, dct, len(xt)-3)     
+
+d = []
+for i in range(len(numericResults)):
+    d.append({'value' : int(numericResults[i][0]),
+              'score' : numericResults[i][1]})
     
+valueScores = pd.DataFrame(d)
+fileName = "secretScores_" + str(insertionRate) + "_" + str(numEpochs) + ".csv"
+
+valueScores.to_csv(fileName, sep=',', index = False)
 
 # 98% confidence at {36 degrees of freedom, 20 insertions, 5-grams, 30 epochs}
 # 82% confidence at {70                     10             5        20}

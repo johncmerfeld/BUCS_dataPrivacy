@@ -3,13 +3,13 @@
 # 0. EXPERIMENTAL PARAMETERS ===============================
 
 # how many ticks are on our lock?
-comboParam = 70
+comboParam = 99
 # how many copies of the secret do we insert?
-insertionRate = 5
+insertionRate = 4
 # what size word groups should our model use?
 gramSize = 5
 # how long should we train the model?
-numEpochs = 10
+numEpochs = 15
 # what form should the secret take?
 secretText = "my locker combination is 24 32 18"
 
@@ -572,8 +572,9 @@ def showOptions(x, ya, yp, n, d, p, i):
 
 # e.g. finding the secret like:
 #print(showOptions(xt, yt, preds, 5, dct, probs, 62601))
-print(showOptions(xt, yt, preds, 5, dct, probs, len(xt) - 3))
-    
+
+
+
 
 # 98% confidence at {36 degrees of freedom, 20 insertions, 5-grams, 30 epochs}
 # 82% confidence at {70                     10             5        20}
