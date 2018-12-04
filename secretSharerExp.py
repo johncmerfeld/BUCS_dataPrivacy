@@ -278,12 +278,42 @@ numericResults = displayNumericResults(comboParam, probs, dct, len(xt)-3)
 d = []
 for i in range(len(numericResults)):
     d.append({'value' : int(numericResults[i][0]),
-              'score' : numericResults[i][1]})
-    
+              'score' : numericResults[i][1],
+              'rank' : i})
+
 valueScores = pd.DataFrame(d)
 fileName = "secretScores_" + str(insertionRate) + "_" + str(numEpochs) + ".csv"
 
-valueScores.to_csv(fileName, sep=',', index = False)
+valueScores.to_csv(fileName, sep = ',', index = False)
+
+def discoverSecret(x, m, gs, i, sl):
+    
+    secret = ""
+    
+    xn = np.zeros((sl, gs), dtype = float)
+    for j in range(sl):
+        for k in range(gs):
+            xn[j][k] = x[i][k]
+
+    p0 = m.predict_classes(xn)
+    
+    for j in range(sl):
+        secret += str(p0[0]) + " "
+        for j in range(sl):
+            for k in range(gs - 1):
+                xn[j][k] = xn[j][k + 1]
+          
+        xn[:, gs -1] = p0
+        
+        p0 = m.predict_classes(xn)
+ 
+    return secret
+
+s = discoverSecret(xt, model, seqLength, len(xt)-3, 3)
+
+secret = ""
+for w in s.split():
+    secret += getWord(dct, int(w)) + " "
 
 # 98% confidence at {36 degrees of freedom, 20 insertions, 5-grams, 30 epochs}
 # 82% confidence at {70                     10             5        20}
