@@ -574,6 +574,37 @@ def showOptions(x, ya, yp, n, d, p, i):
 #print(showOptions(xt, yt, preds, 5, dct, probs, 62601))
 
 
+preds = model.predict_classes(xt, verbose = True)
+probs = model.predict(xt, verbose = True)
+
+# 6. DISCOVER SECRET =======================================
+
+# 6.1 Write number scores to file to calculate rank
+numericResults = displayNumericResults(comboParam, probs, dct, len(xt)-3)     
+
+d = []
+for i in range(len(numericResults)):
+    d.append({'value' : int(numericResults[i][0]),
+              'score' : numericResults[i][1],
+              'rank' : i})
+
+valueScores = pd.DataFrame(d)
+
+valueScores.to_csv(fileName + ".csv", sep = ',', index = False)
+
+# 6.2 Write extracted secret to file
+s = discoverSecret(xt, model, seqLength, len(xt) - secretLength, secretLength)
+
+secret = ""
+for w in s.split():
+    secret += getWord(dct, int(w)) + " "
+
+#remove final space
+predSecret = secretPref + secret[:-1]
+
+text_file = open(fileName + ".txt", "w")
+text_file.write("Predicted secret: '%s'\nActual secret: '%s'\n" % (predSecret, insertedSecret))
+text_file.close()
 
 
 # 98% confidence at {36 degrees of freedom, 20 insertions, 5-grams, 30 epochs}

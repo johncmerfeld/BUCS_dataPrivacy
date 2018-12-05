@@ -407,3 +407,18 @@ def enumerateSecrets(length, size, rid, pref):
                                   'splchk' : d})
                         rid += 1                    
     return d, rid
+
+def numericProbs(x, size, d, gs, m, i ): 
+    xn = np.zeros((1, gs), dtype = float)
+    for k in range(gs):
+        xn[0][k] = x[i][k]
+
+    p0 = m.predict(xn)[0]
+    
+    numericProbs = np.zeros((size), dtype = float)
+    
+    for j in range(size):
+        a = comboString(j)
+        numericProbs[j] = p0[d[a]]
+        
+    return numericProbs

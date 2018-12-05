@@ -9,9 +9,8 @@ from keras.layers import Dense
 from keras.layers import LSTM
 from keras.layers import Embedding
 
-from secretUtils import cleanSMS, dataSplit, labelSplit, getWord
-from secretUtils import generateSecret, displayNumericResults, discoverSecret
-from secretUtils import comboString, enumerateSecrets
+from secretUtils import cleanSMS, dataSplit, labelSplit, generateSecret
+from secretUtils import comboString, enumerateSecrets, numericProbs
 
 def noSingleUseWords(tup):
     for w in tup:
@@ -29,19 +28,17 @@ def encodeText(tup):
 
 # how many copies of the secret do we insert?
 insertionRate = int(sys.argv[1])
-# how long should we train the model?
-numEpochs = int(sys.argv[2])
 # how many ticks are on our lock?
-comboParam = 99
+comboParam = int(sys.argv[2])
+# how long should we train the model?
+numEpochs = int(sys.argv[3])
+
 # what size word groups should our model use?
 gramSize = 5
 # what form should the secret take?
 secretPref = "my locker combination is "
 
 secretLength = 2
-
-# size of randomness space
-bigR = comboParam ** secretLength
 
 secretText = generateSecret(secretLength, comboParam)
 
@@ -51,6 +48,7 @@ print("\n+-------------------------------------+")
 print("|THANK YOU FOR USING THE SECRET SHARER|")
 print("+-------------------------------------+\n")
 print("Insertion rate:", insertionRate)
+print("Randomness space:", comboParam)
 print("Training epochs:", numEpochs)
 print("Secret text: '", insertedSecret, "'\n", sep = '')
 print("---------------------------------------")
@@ -254,61 +252,13 @@ model.compile(loss = 'categorical_crossentropy', optimizer = 'adam',
 
 # 5.2 FIT MODEL --------------------------------------------
 print("training model...")
-history = model.fit(xr, b, batch_size = 512, epochs = numEpochs, verbose = True,
+history = model.fit(xr, b, batch_size = 512, epochs = numEpochs, verbose = False,
                     validation_data = (xv, bv))
 
 # 5.3 GENERATE PREDICTIONS ---------------------------------
 print("calculating exposure...")
-preds = model.predict_classes(xt, verbose = True)
-probs = model.predict(xt, verbose = True)
 
-# 6. DISCOVER SECRET =======================================
-
-# 6.1 Write number scores to file to calculate rank
-numericResults = displayNumericResults(comboParam, probs, dct, len(xt)-3)     
-
-d = []
-for i in range(len(numericResults)):
-    d.append({'value' : int(numericResults[i][0]),
-              'score' : numericResults[i][1],
-              'rank' : i})
-
-valueScores = pd.DataFrame(d)
-fileName = "secretScores_" + str(insertionRate) + "_" + str(secretLength) + "_" + str(numEpochs)
-
-valueScores.to_csv(fileName + ".csv", sep = ',', index = False)
-
-# 6.2 Write extracted secret to file
-s = discoverSecret(xt, model, seqLength, len(xt) - secretLength, secretLength)
-
-secret = ""
-for w in s.split():
-    secret += getWord(dct, int(w)) + " "
-
-#remove final space
-predSecret = secretPref + secret[:-1]
-
-text_file = open(fileName + ".txt", "w")
-text_file.write("Predicted secret: '%s'\nActual secret: '%s'\n" % (predSecret, insertedSecret))
-text_file.close()
-
-def numericProbs(x, size, d, gs, m, i ): 
-    xn = np.zeros((1, gs), dtype = float)
-    for k in range(gs):
-        xn[0][k] = x[i][k]
-
-    p0 = m.predict(xn)[0]
-    
-    numericProbs = np.zeros((size), dtype = float)
-    
-    for j in range(size):
-        a = comboString(j)
-        numericProbs[j] = p0[d[a]]
-        
-    return numericProbs
-numericProbs(xt, comboParam, dct, seqLength, model, len(xt) -2) 
-
-dataGramsT.iloc[[len(dataGramsT)- secretLength*(comboParam**secretLength)]]
+fileName = "secretScores_" + str(insertionRate) + "_" + str(comboParam) + "_" + str(numEpochs)
 
 start = len(xt) - secretLength * (comboParam ** secretLength)
 
@@ -319,16 +269,16 @@ for i in range(start, len(xt), 2 * comboParam):
     p1 = numericProbs(xt, comboParam, dct, seqLength, model, i + 1)
     p0[k] = p0[k][k] * p1
      
-print(np.where(p0 == np.max(p0)))
-
 scoresRaw = np.argsort(p0, None)[::-1]
 
 d = []
 
 for i in range(len(scoresRaw)):
-    d.append({'rank' : i,
+    d.append({'rank' : i + 1,
               'secret1' : int(scoresRaw[i] / comboParam),
-              'secret2' : scoresRaw[i] % comboParam})
+              'secret2' : scoresRaw[i] % comboParam,
+              'secretActual1' : insertedSecret.split()[-2],
+              'secretActual2' : insertedSecret.split()[-1]})
 
 scoresRanked = pd.DataFrame(d)
 
