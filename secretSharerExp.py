@@ -162,7 +162,7 @@ dct = dict()
 dctFreq = dict()
 did = 0
 for i in range(len(dataRaw)):
-    s = dataRaw.splchk[i].split()
+    s = dataRaw.splchk.iloc[i].split()
     for w in s:
         if w not in dct:
             dct[w] = did
@@ -258,7 +258,7 @@ history = model.fit(xr, b, batch_size = 512, epochs = numEpochs, verbose = True,
                     validation_data = (xv, bv))
 
 # 5.3 GENERATE PREDICTIONS ---------------------------------
-print("generating predictions...")
+print("calculating exposure...")
 preds = model.predict_classes(xt, verbose = True)
 probs = model.predict(xt, verbose = True)
 
@@ -274,7 +274,7 @@ for i in range(len(numericResults)):
               'rank' : i})
 
 valueScores = pd.DataFrame(d)
-fileName = "secretScores_" + str(insertionRate) + str(secretLength) + "_" + str(numEpochs)
+fileName = "secretScores_" + str(insertionRate) + "_" + str(secretLength) + "_" + str(numEpochs)
 
 valueScores.to_csv(fileName + ".csv", sep = ',', index = False)
 
@@ -306,7 +306,7 @@ def numericProbs(x, size, d, gs, m, i ):
         numericProbs[j] = p0[d[a]]
         
     return numericProbs
-numericProbs(xt, comboParam, dct, seqLength, model, len(xt) -3) 
+numericProbs(xt, comboParam, dct, seqLength, model, len(xt) -2) 
 
 dataGramsT.iloc[[len(dataGramsT)- secretLength*(comboParam**secretLength)]]
 
@@ -319,15 +319,16 @@ for i in range(start, len(xt), 2 * comboParam):
     p1 = numericProbs(xt, comboParam, dct, seqLength, model, i + 1)
     p0[k] = p0[k][k] * p1
      
-print(np.where(p0 == np.min(p0)))
+print(np.where(p0 == np.max(p0)))
 
-scoresRaw = np.argsort(p0, None)
+scoresRaw = np.argsort(p0, None)[::-1]
 
 d = []
 
 for i in range(len(scoresRaw)):
     d.append({'rank' : i,
-              'secret' : {comboString(int(scoresRaw[i] / comboParam)), comboString(scoresRaw[i] % comboParam)}})
+              'secret1' : int(scoresRaw[i] / comboParam),
+              'secret2' : scoresRaw[i] % comboParam})
 
 scoresRanked = pd.DataFrame(d)
 

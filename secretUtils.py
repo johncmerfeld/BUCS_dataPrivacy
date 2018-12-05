@@ -5,9 +5,7 @@ from random import randint
 def displayNumericResults(c, p, d, i):
     result = np.zeros((c, 2), dtype = float)
     for j in range(c):
-        a = str(j)
-        if i < 10:
-            a = "0" + a
+        a = comboString(j)
             
         result[j][0] = j
         result[j][1] = p[i][d[a]]
