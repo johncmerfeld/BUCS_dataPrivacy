@@ -1,5 +1,6 @@
 import numpy as np
 import re
+from random import randint
 
 def displayNumericResults(c, p, d, i):
     result = np.zeros((c, 2), dtype = float)
@@ -316,3 +317,95 @@ def showOptions(x, ya, yp, n, d, p, i):
     for j in range(n):
         print(j + 1, ". ", getWord(d, pa[j]), " (", round(ps[j] * 100, 2), "%)", sep = '')
 
+def generateSecret(length, size):
+    secret = ""
+    for i in range(length):
+        a = randint(0, size)
+        if a < 10:
+            a = "0" + str(a)
+        a = str(a)
+        secret = secret + a + " "
+    
+    return secret[:-1]
+
+def discoverSecret(x, m, gs, i, sl):
+    
+    secret = ""
+    
+    xn = np.zeros((sl, gs), dtype = float)
+    for j in range(sl):
+        for k in range(gs):
+            xn[j][k] = x[i][k]
+
+    p0 = m.predict_classes(xn)
+    
+    for j in range(sl):
+        secret += str(p0[0]) + " "
+        for j in range(sl):
+            for k in range(gs - 1):
+                xn[j][k] = xn[j][k + 1]
+          
+        xn[:, gs -1] = p0
+        
+        p0 = m.predict_classes(xn)
+ 
+    return secret
+
+def comboString(i):
+    s = str(i)
+    if i < 10:
+        s = "0" + s
+    return s
+    
+
+def enumerateSecrets(length, size, rid, pref):
+    d = []
+    
+    if length == 1:
+        for i in range(size):
+            a = pref + comboString(i)
+            d.append({'id' : rid,
+                      'text' : a,
+                      'noPunc' : a,
+                      'splchk' : a})
+            rid += 1
+    
+    if length == 2:
+        for i in range(size):
+            a = pref + comboString(i)
+            for j in range(size):
+                b = a + " " + comboString(j)
+                d.append({'id' : rid,
+                          'text' : b,
+                          'noPunc' : b,
+                          'splchk' : b})
+                rid += 1
+                
+    if length == 3:
+        for i in range(size):
+            a = pref + comboString(i)
+            for j in range(size):
+                b = a + " " + comboString(j)
+                for k in range(size):
+                    c = b + " " + comboString(k)
+                    d.append({'id' : rid,
+                              'text' : c,
+                              'noPunc' : c,
+                              'splchk' : c})
+                    rid += 3             
+    
+    if length == 4:
+        for i in range(size):
+            a = pref + comboString(i)
+            for j in range(size):
+                b = a + " " + comboString(j)
+                for k in range(size):
+                    c = b + " " + comboString(k)
+                    for q in range(size):
+                        d = c + " " + comboString(q)
+                        d.append({'id' : rid,
+                                  'text' : d,
+                                  'noPunc' : d,
+                                  'splchk' : d})
+                        rid += 1                    
+    return d, rid

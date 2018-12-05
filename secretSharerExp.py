@@ -3,16 +3,15 @@ import numpy as np
 import pandas as pd
 import xml.etree.ElementTree as ET
 from nltk import ngrams
-import re
 
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
 from keras.layers import Embedding
 
-from secretUtils import cleanSMS, dataSplit
-from secretUtils import labelSplit, getWord, showResult, showResults
-from secretUtils import showOptions, learnSecret, displayNumericResults
+from secretUtils import cleanSMS, dataSplit, labelSplit, getWord
+from secretUtils import generateSecret, displayNumericResults, discoverSecret
+from secretUtils import comboString, enumerateSecrets
 
 def noSingleUseWords(tup):
     for w in tup:
@@ -38,15 +37,24 @@ comboParam = 99
 gramSize = 5
 # what form should the secret take?
 secretPref = "my locker combination is "
-secretText = "24 32 18"
+
+secretLength = 2
+
+# size of randomness space
+bigR = comboParam ** secretLength
+
+secretText = generateSecret(secretLength, comboParam)
 
 insertedSecret = secretPref + secretText
 
-print("\n--------------------\nTHANK YOU FOR USING THE SECRET SHARER\n--------------------\n")
+print("\n+-------------------------------------+")
+print("|THANK YOU FOR USING THE SECRET SHARER|")
+print("+-------------------------------------+\n")
 print("Insertion rate:", insertionRate)
 print("Training epochs:", numEpochs)
 print("Secret text: '", insertedSecret, "'\n", sep = '')
-print("your model is cooking now...\n------------------------------")
+print("---------------------------------------")
+print("\npreparing data...")
 
 # 1. READ DATA =============================================
 
@@ -61,9 +69,7 @@ for i in range(len(root)):
 # 1.2 ADD NUMBERS TO THE VOCABULARY ------------------------
 rootId = len(root)
 for i in range(comboParam):
-    a = str(i)
-    if i < 10:
-        a = "0" + a
+    a = comboString(i)
     d.append({'id' : rootId,
               'text' : gramSize * (a + " ")})
     rootId += 1
@@ -95,13 +101,9 @@ dataRawV = dataRawR[~mskVal]
 dataRawR = dataRawR[mskVal]
 
 # 2.3 INSERT SECRET ---------------------------------------
-# once in test data
-d = []
-d.append({'id' : rootId,
-          'text' : insertedSecret,
-          'noPunc' : insertedSecret,
-          'splchk' : insertedSecret})
-rootId += 1
+# all predictions in test data
+
+d, rootId = enumerateSecrets(secretLength, comboParam, rootId, secretPref)
 
 testSecret = pd.DataFrame(d);
 dataRawT = dataRawT.append(d)
@@ -254,29 +256,15 @@ model.compile(loss = 'categorical_crossentropy', optimizer = 'adam',
 print("training model...")
 history = model.fit(xr, b, batch_size = 512, epochs = numEpochs, verbose = True,
                     validation_data = (xv, bv))
-model.save('model5.h5')
 
 # 5.3 GENERATE PREDICTIONS ---------------------------------
 print("generating predictions...")
 preds = model.predict_classes(xt, verbose = True)
 probs = model.predict(xt, verbose = True)
 
-acc = np.zeros((len(xt)), dtype = int)
-for i in range(len(xt)):
-    if (yt[i] == preds[i]):
-        acc[i] = 1
-
-modelAccuracy = np.sum(acc) / len(acc)
-
-print("Model predicts ", round(modelAccuracy * 100, 2), 
-      "% of next words correctly", sep = '')
-# 10.07 - 11/23
-# 12.21 - 11/30
-
 # 6. DISCOVER SECRET =======================================
 
-# e.g. finding the secret like:
-#print(showOptions(xt, yt, preds, 5, dct, probs, 62601))
+# 6.1 Write number scores to file to calculate rank
 numericResults = displayNumericResults(comboParam, probs, dct, len(xt)-3)     
 
 d = []
@@ -286,49 +274,61 @@ for i in range(len(numericResults)):
               'rank' : i})
 
 valueScores = pd.DataFrame(d)
-fileName = "secretScores_" + str(insertionRate) + "_" + str(numEpochs) 
+fileName = "secretScores_" + str(insertionRate) + str(secretLength) + "_" + str(numEpochs)
 
 valueScores.to_csv(fileName + ".csv", sep = ',', index = False)
 
-def discoverSecret(x, m, gs, i, sl):
-    
-    secret = ""
-    
-    xn = np.zeros((sl, gs), dtype = float)
-    for j in range(sl):
-        for k in range(gs):
-            xn[j][k] = x[i][k]
-
-    p0 = m.predict_classes(xn)
-    
-    for j in range(sl):
-        secret += str(p0[0]) + " "
-        for j in range(sl):
-            for k in range(gs - 1):
-                xn[j][k] = xn[j][k + 1]
-          
-        xn[:, gs -1] = p0
-        
-        p0 = m.predict_classes(xn)
- 
-    return secret
-
-s = discoverSecret(xt, model, seqLength, len(xt)-3, 3)
+# 6.2 Write extracted secret to file
+s = discoverSecret(xt, model, seqLength, len(xt) - secretLength, secretLength)
 
 secret = ""
 for w in s.split():
     secret += getWord(dct, int(w)) + " "
 
-predSecret = secretPref + secret
+#remove final space
+predSecret = secretPref + secret[:-1]
 
 text_file = open(fileName + ".txt", "w")
 text_file.write("Predicted secret: '%s'\nActual secret: '%s'\n" % (predSecret, insertedSecret))
 text_file.close()
 
-# 98% confidence at {36 degrees of freedom, 20 insertions, 5-grams, 30 epochs}
-# 82% confidence at {70                     10             5        20}
-# 41% confidence at {70                     5              5        20}
-# MISS           at {70			    5 		   5	    10}    
+def numericProbs(x, size, d, gs, m, i ): 
+    xn = np.zeros((1, gs), dtype = float)
+    for k in range(gs):
+        xn[0][k] = x[i][k]
 
-# https://machinelearningmastery.com/how-to-develop-a-word-level-neural-language-model-in-keras/
+    p0 = m.predict(xn)[0]
+    
+    numericProbs = np.zeros((size), dtype = float)
+    
+    for j in range(size):
+        a = comboString(j)
+        numericProbs[j] = p0[d[a]]
+        
+    return numericProbs
+numericProbs(xt, comboParam, dct, seqLength, model, len(xt) -3) 
 
+dataGramsT.iloc[[len(dataGramsT)- secretLength*(comboParam**secretLength)]]
+
+start = len(xt) - secretLength * (comboParam ** secretLength)
+
+p0 = np.ones((comboParam, comboParam), dtype = float)
+for i in range(start, len(xt), 2 * comboParam):
+    k = int((i-start) / (2 * comboParam))
+    p0[k] = numericProbs(xt, comboParam, dct, seqLength, model, i)
+    p1 = numericProbs(xt, comboParam, dct, seqLength, model, i + 1)
+    p0[k] = p0[k][k] * p1
+     
+print(np.where(p0 == np.min(p0)))
+
+scoresRaw = np.argsort(p0, None)
+
+d = []
+
+for i in range(len(scoresRaw)):
+    d.append({'rank' : i,
+              'secret' : {comboString(int(scoresRaw[i] / comboParam)), comboString(scoresRaw[i] % comboParam)}})
+
+scoresRanked = pd.DataFrame(d)
+
+scoresRanked.to_csv(fileName + "_ranks.csv", sep = ',', index = False)
