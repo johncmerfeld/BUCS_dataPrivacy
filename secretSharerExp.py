@@ -30,32 +30,34 @@ def encodeText(tup):
 # add false flags??
 
 # how many copies of the secret do we insert?
-insertionRate = int(sys.argv[1])
+numTrueSecrets = int(sys.argv[1])
 # how many 'noisy' secrets do we insert?
-noisySecrets = int(sys.argv[2])
+numFalseSecrets = int(sys.argv[2])
 # how many ticks are on our lock?
-comboParam = int(sys.argv[3])
+numDistinctValues = int(sys.argv[3])
 # how long should we train the model?
 numEpochs = int(sys.argv[4])
 batchSize = int(sys.argv[5])
 
 # what form should the secret take?
-secretPref = "my secret locker combination is "
-gramSize = len(secretPref.split()) + 1
+secretPref = "my locker combination is "
+seqLength = len(secretPref.split())
+gramSize = seqLength + 1
 
 # randomness space
 secretLength = 2
-bigR = comboParam ** secretLength
+bigR = numDistinctValues ** secretLength
 
-secretText = generateSecret(secretLength, comboParam)
+secretText = generateSecret(secretLength, numDistinctValues)
 
 insertedSecret = secretPref + secretText
 
 print("\n+---------------------------------------+")
 print("| THANK YOU FOR USING THE SECRET SHARER |")
 print("+---------------------------------------+\n")
-print(" Insertion rate:", insertionRate)
-print(" Randomness space:", comboParam)
+print(" True secrets inserted:", numTrueSecrets)
+print(" False secrets inserted:", numFalseSecrets)
+print(" Randomness space:", numDistinctValues)
 print(" Training epochs:", numEpochs)
 print(" Batch size:", batchSize)
 print(" Secret text: '", insertedSecret, "'\n", sep = '')
@@ -74,7 +76,7 @@ for i in range(len(root)):
 
 # 1.2 ADD NUMBERS TO THE VOCABULARY ------------------------
 rootId = len(root)
-for i in range(comboParam):
+for i in range(numDistinctValues):
     a = comboString(i)
     d.append({'id' : rootId,
               'text' : gramSize * (a + " ")})
@@ -109,11 +111,11 @@ dataRawR = dataRawR[mskVal]
 # 2.3 INSERT SECRET ---------------------------------------
 # all predictions in test data
 
-d, rootId = enumerateSecrets(secretLength, comboParam, rootId, secretPref)
+d, rootId = enumerateSecrets(secretLength, numDistinctValues, rootId, secretPref)
 
 # get some noise from these fake secret to add to training
-if noisySecrets > 0:
-    noise = [d[i] for i in sorted(random.sample(range(len(d)), noisySecrets))]
+if numFalseSecrets > 0:
+    noise = [d[i] for i in sorted(random.sample(range(len(d)), numFalseSecrets))]
     noiseDF = pd.DataFrame(noise)
 
 testSecret = pd.DataFrame(d);
@@ -121,7 +123,7 @@ dataRawT = dataRawT.append(d)
 
 d = []
 # several in training data
-for i in range(insertionRate):
+for i in range(numTrueSecrets):
     d.append({'id' : rootId,
               'text' : insertedSecret,
               'noPunc' : insertedSecret,
@@ -130,7 +132,7 @@ for i in range(insertionRate):
 
 trainSecret = pd.DataFrame(d)
 dataRawR = dataRawR.append(d)
-if noisySecrets > 0:
+if numFalseSecrets > 0:
     dataRawR = dataRawR.append(noiseDF)
 
 # 2.4 SPLIT INTO OVERLAPPING SETS OF FIVE WORDS -----------
@@ -218,13 +220,13 @@ dataGramsV['y'] = dataGramsV['codes'].apply(labelSplit)
 
 # 4.3 POPULATE MODEL OBJECTS -------------------------------
 
-xr = np.zeros((len(dataGramsR), gramSize - 1), dtype = int) 
+xr = np.zeros((len(dataGramsR), seqLength), dtype = int) 
 yr = np.zeros((len(dataGramsR)), dtype = int)
 
-xv = np.zeros((len(dataGramsV), gramSize - 1), dtype = int)
+xv = np.zeros((len(dataGramsV), seqLength), dtype = int)
 yv = np.zeros((len(dataGramsV)), dtype = int)
 
-xt = np.zeros((len(dataGramsT), gramSize - 1), dtype = int)
+xt = np.zeros((len(dataGramsT), seqLength), dtype = int)
 yt = np.zeros((len(dataGramsT)), dtype = int)
 
 for i in range(len(dataGramsR)):
@@ -244,7 +246,6 @@ for i in range(len(dataGramsT)):
 
 # 5. TRAIN MODEL ===========================================
 vocabSize = len(dct)
-seqLength = gramSize - 1
 
 # 5.1 ONE-HOT ENCODE LABEL DATA ----------------------------
 b = np.zeros((len(yr), vocabSize))
@@ -266,19 +267,19 @@ model.compile(loss = 'categorical_crossentropy', optimizer = 'adam',
 
 # 5.2 FIT MODEL --------------------------------------------
 print("training model...")
-history = model.fit(xr, b, batch_size = batchSize, epochs = numEpochs, verbose = False,
+history = model.fit(xr, b, batch_size = batchSize, epochs = numEpochs, verbose = True,
                     validation_data = (xv, bv))
 
 # 5.3 GENERATE PREDICTIONS ---------------------------------
 print("calculating exposure...")
 
-start = len(xt) - secretLength * (comboParam ** secretLength)
+start = len(xt) - secretLength * (numDistinctValues ** secretLength)
 
-p0 = np.ones((comboParam, comboParam), dtype = float)
-for i in range(start, len(xt), 2 * comboParam):
-    k = int((i-start) / (2 * comboParam))
-    p0[k] = numericProbs(xt, comboParam, dct, seqLength, model, i)
-    p1 = numericProbs(xt, comboParam, dct, seqLength, model, i + 1)
+p0 = np.ones((numDistinctValues, numDistinctValues), dtype = float)
+for i in range(start, len(xt), 2 * numDistinctValues):
+    k = int((i-start) / (2 * numDistinctValues))
+    p0[k] = numericProbs(xt, numDistinctValues, dct, seqLength, model, i)
+    p1 = numericProbs(xt, numDistinctValues, dct, seqLength, model, i + 1)
     p0[k] = p0[k][k] * p1
      
 scoresRaw = np.argsort(p0, None)[::-1]
@@ -287,8 +288,8 @@ d = []
 
 for i in range(len(scoresRaw)):
     d.append({'rank' : i + 1,
-              'secret1' : int(scoresRaw[i] / comboParam),
-              'secret2' : scoresRaw[i] % comboParam,
+              'secret1' : int(scoresRaw[i] / numDistinctValues),
+              'secret2' : scoresRaw[i] % numDistinctValues,
               'secretActual1' : int(insertedSecret.split()[-2]),
               'secretActual2' : int(insertedSecret.split()[-1])})
 
@@ -301,9 +302,10 @@ exposure = log(bigR, 2) - log(sr2, 2)
 d = []
 d.append({'numEpochs' : numEpochs,
           'batchSize' : batchSize,
-          'insertionRate' : insertionRate,
-          'noisySecrets' : noisySecrets,
-          'randomnessSpace' : comboParam,
+          'numTrueSecrets' : numTrueSecrets,
+          'numFalseSecrets' : numFalseSecrets,
+          'randomnessSpace' : numDistinctValues,
+          'secretPrefixLength' : seqLength,
           'secretType' : secretPref,
           'exposure': exposure})
 
