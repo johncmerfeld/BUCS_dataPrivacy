@@ -1,8 +1,9 @@
-import sys
+import sys, os, random
 import numpy as np
 import pandas as pd
 import xml.etree.ElementTree as ET
 from nltk import ngrams
+from math import log
 
 from keras.models import Sequential
 from keras.layers import Dense
@@ -26,34 +27,39 @@ def encodeText(tup):
 
 # 0. EXPERIMENTAL PARAMETERS ===============================
 
-# add false flags and batch size??
+# add false flags??
 
 # how many copies of the secret do we insert?
 insertionRate = int(sys.argv[1])
+# how many 'noisy' secrets do we insert?
+noisySecrets = int(sys.argv[2])
 # how many ticks are on our lock?
-comboParam = int(sys.argv[2])
+comboParam = int(sys.argv[3])
 # how long should we train the model?
-numEpochs = int(sys.argv[3])
+numEpochs = int(sys.argv[4])
+batchSize = int(sys.argv[5])
 
-# what size word groups should our model use?
-gramSize = 5
 # what form should the secret take?
-secretPref = "my locker combination is "
+secretPref = "my secret locker combination is "
+gramSize = len(secretPref.split()) + 1
 
+# randomness space
 secretLength = 2
+bigR = comboParam ** secretLength
 
 secretText = generateSecret(secretLength, comboParam)
 
 insertedSecret = secretPref + secretText
 
-print("\n+-------------------------------------+")
-print("|THANK YOU FOR USING THE SECRET SHARER|")
-print("+-------------------------------------+\n")
-print("Insertion rate:", insertionRate)
-print("Randomness space:", comboParam)
-print("Training epochs:", numEpochs)
-print("Secret text: '", insertedSecret, "'\n", sep = '')
-print("---------------------------------------")
+print("\n+---------------------------------------+")
+print("| THANK YOU FOR USING THE SECRET SHARER |")
+print("+---------------------------------------+\n")
+print(" Insertion rate:", insertionRate)
+print(" Randomness space:", comboParam)
+print(" Training epochs:", numEpochs)
+print(" Batch size:", batchSize)
+print(" Secret text: '", insertedSecret, "'\n", sep = '')
+print("-----------------------------------------")
 print("\npreparing data...")
 
 # 1. READ DATA =============================================
@@ -105,6 +111,11 @@ dataRawR = dataRawR[mskVal]
 
 d, rootId = enumerateSecrets(secretLength, comboParam, rootId, secretPref)
 
+# get some noise from these fake secret to add to training
+if noisySecrets > 0:
+    noise = [d[i] for i in sorted(random.sample(range(len(d)), noisySecrets))]
+    noiseDF = pd.DataFrame(noise)
+
 testSecret = pd.DataFrame(d);
 dataRawT = dataRawT.append(d)
 
@@ -119,6 +130,8 @@ for i in range(insertionRate):
 
 trainSecret = pd.DataFrame(d)
 dataRawR = dataRawR.append(d)
+if noisySecrets > 0:
+    dataRawR = dataRawR.append(noiseDF)
 
 # 2.4 SPLIT INTO OVERLAPPING SETS OF FIVE WORDS -----------
 
@@ -247,20 +260,17 @@ model.add(LSTM(100, return_sequences = True))
 model.add(LSTM(100))
 model.add(Dense(100, activation = 'relu'))
 model.add(Dense(vocabSize, activation = 'softmax'))
-#print(model.summary())
 
 model.compile(loss = 'categorical_crossentropy', optimizer = 'adam', 
               metrics = ['accuracy'])
 
 # 5.2 FIT MODEL --------------------------------------------
 print("training model...")
-history = model.fit(xr, b, batch_size = 256, epochs = numEpochs, verbose = False,
+history = model.fit(xr, b, batch_size = batchSize, epochs = numEpochs, verbose = False,
                     validation_data = (xv, bv))
 
 # 5.3 GENERATE PREDICTIONS ---------------------------------
 print("calculating exposure...")
-
-fileName = "secretScores_" + str(insertionRate) + "_" + str(comboParam) + "_" + str(numEpochs)
 
 start = len(xt) - secretLength * (comboParam ** secretLength)
 
@@ -279,9 +289,29 @@ for i in range(len(scoresRaw)):
     d.append({'rank' : i + 1,
               'secret1' : int(scoresRaw[i] / comboParam),
               'secret2' : scoresRaw[i] % comboParam,
-              'secretActual1' : insertedSecret.split()[-2],
-              'secretActual2' : insertedSecret.split()[-1]})
+              'secretActual1' : int(insertedSecret.split()[-2]),
+              'secretActual2' : int(insertedSecret.split()[-1])})
 
-scoresRanked = pd.DataFrame(d)
+sr = pd.DataFrame(d)
+sr1 = sr[sr.secret1 == sr.secretActual1]
+sr2 = int(sr1[sr1.secret2 == sr1.secretActual2]['rank'])
 
-scoresRanked.to_csv(fileName + "_ranks256.csv", sep = ',', index = False)
+exposure = log(bigR, 2) - log(sr2, 2)
+
+d = []
+d.append({'numEpochs' : numEpochs,
+          'batchSize' : batchSize,
+          'insertionRate' : insertionRate,
+          'noisySecrets' : noisySecrets,
+          'randomnessSpace' : comboParam,
+          'secretType' : secretPref,
+          'exposure': exposure})
+
+results = pd.DataFrame(d)
+
+fileName = "experimentalResults.csv"
+# if file does not exist write header 
+if not os.path.isfile(fileName):
+   results.to_csv(fileName, sep = ',', index = False)
+else: # else it exists so append without writing the header
+   results.to_csv(fileName, mode = 'a', sep = ',', header = False, index = False)

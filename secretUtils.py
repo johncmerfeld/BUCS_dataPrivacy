@@ -350,10 +350,7 @@ def discoverSecret(x, m, gs, i, sl):
     return secret
 
 def comboString(i):
-    s = str(i)
-    if i < 10:
-        s = "0" + s
-    return s
+    return str(i)
     
 
 def enumerateSecrets(length, size, rid, pref):
