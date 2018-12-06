@@ -26,6 +26,8 @@ def encodeText(tup):
 
 # 0. EXPERIMENTAL PARAMETERS ===============================
 
+# add false flags and batch size??
+
 # how many copies of the secret do we insert?
 insertionRate = int(sys.argv[1])
 # how many ticks are on our lock?
@@ -252,7 +254,7 @@ model.compile(loss = 'categorical_crossentropy', optimizer = 'adam',
 
 # 5.2 FIT MODEL --------------------------------------------
 print("training model...")
-history = model.fit(xr, b, batch_size = 512, epochs = numEpochs, verbose = False,
+history = model.fit(xr, b, batch_size = 256, epochs = numEpochs, verbose = False,
                     validation_data = (xv, bv))
 
 # 5.3 GENERATE PREDICTIONS ---------------------------------
@@ -282,4 +284,4 @@ for i in range(len(scoresRaw)):
 
 scoresRanked = pd.DataFrame(d)
 
-scoresRanked.to_csv(fileName + "_ranks.csv", sep = ',', index = False)
+scoresRanked.to_csv(fileName + "_ranks256.csv", sep = ',', index = False)
