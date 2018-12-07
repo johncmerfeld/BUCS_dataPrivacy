@@ -27,8 +27,6 @@ def encodeText(tup):
 
 # 0. EXPERIMENTAL PARAMETERS ===============================
 
-# add false flags??
-
 # how many copies of the secret do we insert?
 numTrueSecrets = int(sys.argv[1])
 # how many 'noisy' secrets do we insert?
