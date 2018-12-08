@@ -9,9 +9,9 @@ ggplot(data,
        aes(x = numEpochs,
            y = exposure)) + 
   geom_point(aes(size = as.factor(batchSize)),
+             position = position_jitter(width = 0.9, height = 0.2),
              alpha = 0.6) + 
-  geom_smooth(method = "lm") + 
-  geom_jitter(width = 0.5, height = 0.2)
+  geom_smooth(method = "lm")
 
 ggplot(data[data$numFalseSecrets > 1],
        aes(x = numTrueSecrets,
