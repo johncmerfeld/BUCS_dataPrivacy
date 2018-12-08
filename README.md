@@ -1,5 +1,7 @@
-# BUCS_dataPrivacy
-Experimental code for CS 591: Privacy in Machine Learning and Statistical Inference
+# Secret sharer and other words 
 
-Hadamard stuff yeah yeah
+1. Tech specs
 
+2. Differences from Carlini paper
+
+3. Code walkthrough
