@@ -13,19 +13,22 @@ from keras.layers import Embedding
 from secretUtils import cleanSMS, dataSplit, labelSplit, generateSecret
 from secretUtils import comboString, enumerateSecrets, numericProbs
 
+# applied function to remove data entries containing words only seen once in
+#   the entire corpus
 def noSingleUseWords(tup):
     for w in tup:
         if w not in dct:
             return False
     return True
 
+# applied function to encode words from the corpus as unique numeric values
 def encodeText(tup):
     code = [None] * len(tup)
     for i in range(len(tup)):
         code[i] = dct[tup[i]]  
     return tuple(code)
 
-# 0. EXPERIMENTAL PARAMETERS ===============================
+# 0. EXPERIMENTAL SETUP ====================================
 
 # how many copies of the secret do we insert?
 numTrueSecrets = int(sys.argv[1])
@@ -46,8 +49,8 @@ gramSize = seqLength + 1
 secretLength = 2
 bigR = numDistinctValues ** secretLength
 
+# generate a random secret
 secretText = generateSecret(secretLength, numDistinctValues)
-
 insertedSecret = secretPref + secretText
 
 print("\n+---------------------------------------+")
@@ -91,11 +94,12 @@ dataRaw['noPunc'] = dataRaw['text'].apply(
         )
 
 # 2.2 SCRUB MESSAGES ----------------------------------------   
+# found that this needed to be done twice to find words separated
+#   by the first iteration
 dataRaw['splchk'] = dataRaw['noPunc'].apply(cleanSMS)
 dataRaw['splchk'] = dataRaw['splchk'].apply(cleanSMS)
 
 # 2.2 SPLIT INTO TRAIN, TEST, AND VALIDATION ---------------
-
 # train-test split
 mskTrain = np.random.rand(len(dataRaw)) < 0.8
 dataRawR = dataRaw[mskTrain]
@@ -107,8 +111,7 @@ dataRawV = dataRawR[~mskVal]
 dataRawR = dataRawR[mskVal]
 
 # 2.3 INSERT SECRET ---------------------------------------
-# all predictions in test data
-
+# add all possible secrets to the test data for exposure calculations later
 d, rootId = enumerateSecrets(secretLength, numDistinctValues, rootId, secretPref)
 
 # get some noise from these fake secret to add to training
@@ -133,7 +136,7 @@ dataRawR = dataRawR.append(d)
 if numFalseSecrets > 0:
     dataRawR = dataRawR.append(noiseDF)
 
-# 2.4 SPLIT INTO OVERLAPPING SETS OF FIVE WORDS -----------
+# 2.4 SPLIT INTO OVERLAPPING SETS OF WORDS -----------000000
 
 d = []
 gid = 0
@@ -217,38 +220,40 @@ dataGramsV['x'] = dataGramsV['codes'].apply(dataSplit)
 dataGramsV['y'] = dataGramsV['codes'].apply(labelSplit)
 
 # 4.3 POPULATE MODEL OBJECTS -------------------------------
-
+# training
 xr = np.zeros((len(dataGramsR), seqLength), dtype = int) 
 yr = np.zeros((len(dataGramsR)), dtype = int)
-
-xv = np.zeros((len(dataGramsV), seqLength), dtype = int)
-yv = np.zeros((len(dataGramsV)), dtype = int)
-
-xt = np.zeros((len(dataGramsT), seqLength), dtype = int)
-yt = np.zeros((len(dataGramsT)), dtype = int)
-
 for i in range(len(dataGramsR)):
     for j in range(len(dataGramsR.x.iloc[i])):
         xr[i][j] = dataGramsR.x.iloc[i][j]
     yr[i] = dataGramsR.y.iloc[i]
-    
+
+# validation
+xv = np.zeros((len(dataGramsV), seqLength), dtype = int)
+yv = np.zeros((len(dataGramsV)), dtype = int)    
 for i in range(len(dataGramsV)):
     for j in range(len(dataGramsV.x.iloc[i])):
         xv[i][j] = dataGramsV.x.iloc[i][j]
     yv[i] = dataGramsV.y.iloc[i]
     
+# testing
+xt = np.zeros((len(dataGramsT), seqLength), dtype = int)
+yt = np.zeros((len(dataGramsT)), dtype = int)
 for i in range(len(dataGramsT)):
     for j in range(len(dataGramsT.x.iloc[i])):
         xt[i][j] = dataGramsT.x.iloc[i][j]
     yt[i] = dataGramsT.y.iloc[i]
 
 # 5. TRAIN MODEL ===========================================
+
 vocabSize = len(dct)
 
 # 5.1 ONE-HOT ENCODE LABEL DATA ----------------------------
+# training
 b = np.zeros((len(yr), vocabSize))
 b[np.arange(len(yr)), yr] = 1
 
+# validation
 bv = np.zeros((len(yv), vocabSize))
 bv[np.arange(len(yv)), yv] = 1
 
@@ -268,9 +273,11 @@ print("training model...")
 history = model.fit(xr, b, batch_size = batchSize, epochs = numEpochs, verbose = True,
                     validation_data = (xv, bv))
 
-# 5.3 GENERATE PREDICTIONS ---------------------------------
+# 6. CALCULATE EXPOSURE ====================================
+
 print("calculating exposure...")
 
+# 6.1 ENUMERATE OVER EVERY POSSIBLE SECRET -----------------
 start = len(xt) - secretLength * (numDistinctValues ** secretLength)
 
 p0 = np.ones((numDistinctValues, numDistinctValues), dtype = float)
@@ -282,8 +289,8 @@ for i in range(start, len(xt), 2 * numDistinctValues):
      
 scoresRaw = np.argsort(p0, None)[::-1]
 
+# 6.2 CALCULATE RANKS OF ALL SECRETS -----------------------
 d = []
-
 for i in range(len(scoresRaw)):
     d.append({'rank' : i + 1,
               'secret1' : int(scoresRaw[i] / numDistinctValues),
@@ -291,12 +298,14 @@ for i in range(len(scoresRaw)):
               'secretActual1' : int(insertedSecret.split()[-2]),
               'secretActual2' : int(insertedSecret.split()[-1])})
 
-sr = pd.DataFrame(d)
-sr1 = sr[sr.secret1 == sr.secretActual1]
-sr2 = int(sr1[sr1.secret2 == sr1.secretActual2]['rank'])
+# 6.3 CALCULATE EXPOSURE OF INSERTED SECRET ----------------
+secretRanks = pd.DataFrame(d)
+secretMatch1 = secretRanks[secretRanks.secret1 == secretRanks.secretActual1]
+secretMatch2 = int(secretMatch1[secretMatch1.secret2 == secretMatch1.secretActual2]['rank'])
 
-exposure = log(bigR, 2) - log(sr2, 2)
+exposure = log(bigR, 2) - log(secretMatch2, 2)
 
+# 6.4 APPEND RESULTS TO DATA SET ---------------------------
 d = []
 d.append({'numEpochs' : numEpochs,
           'batchSize' : batchSize,

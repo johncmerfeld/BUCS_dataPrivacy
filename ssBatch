@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 
-python3 secretSharerExp4.py 1 0 500 50 512
-python3 secretSharerExp4.py 8 0 500 1 512
-python3 secretSharerExp4.py 16 0 500 1 512
-python3 secretSharerExp4.py 32 0 500 1 512
+python3 secretSharerExp4.py 6 0 500 2 512
+python3 secretSharerExp4.py 16 0 500 2 512
+python3 secretSharerExp4.py 32 0 500 2 512
+python3 secretSharerExp4.py 16 0 500 3 512
 python3 secretSharerExp4.py 1 1 5000 5 512
 python3 secretSharerExp4.py 1 1 50000 5 512
 python3 secretSharerExp4.py 1 1 5000 10 512
 python3 secretSharerExp4.py 8 1 50000 1 512
 python3 secretSharerExp4.py 8 1 5000 1 512
 python3 secretSharerExp4.py 1 1 50000 10 512
+python3 secretSharerExp4.py 1 0 500 50 512
