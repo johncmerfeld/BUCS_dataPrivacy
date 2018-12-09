@@ -2,7 +2,8 @@
 
 ## Tech specs
   - **Environment**: Python 3.7.0; TensorFlow 1.12.0, run on a Macbook Pro CPU; Keras 2.2.4; Pandas 0.23.4; NumPy 1.15.4;
-  - **Summary of typical model**:  ```_________________________________________________________________
+  - **Summary of typical model**:
+  ```_________________________________________________________________
 Layer (type)                 Output Shape              Param #   
 =================================================================
 embedding_14 (Embedding)     (None, 4, 4)              56336     
